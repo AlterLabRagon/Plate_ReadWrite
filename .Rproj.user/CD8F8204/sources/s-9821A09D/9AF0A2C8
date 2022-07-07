@@ -1,0 +1,32 @@
+{
+    "id": "9AF0A2C8",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1656614199837.0,
+    "source_on_save": false,
+    "relative_order": 27,
+    "properties": {
+        "expression": "group_sd",
+        "caption": "group_sd",
+        "totalObservations": 91,
+        "displayedObservations": 91,
+        "variables": 71,
+        "cacheKey": "34177438",
+        "object": "group_sd",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=group_sd&cache_key=34177438&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 0,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1656614199837,
+    "read_only": false,
+    "read_only_alternatives": []
+}

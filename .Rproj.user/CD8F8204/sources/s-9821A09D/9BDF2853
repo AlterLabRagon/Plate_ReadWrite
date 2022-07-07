@@ -1,0 +1,32 @@
+{
+    "id": "9BDF2853",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1656975824915.0,
+    "source_on_save": false,
+    "relative_order": 33,
+    "properties": {
+        "expression": "biana_meta_data",
+        "caption": "biana_meta_data",
+        "totalObservations": 96,
+        "displayedObservations": 96,
+        "variables": 3,
+        "cacheKey": "205BC12D",
+        "object": "biana_meta_data",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=biana_meta_data&cache_key=205BC12D&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 4364930288,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1656975824915,
+    "read_only": false,
+    "read_only_alternatives": []
+}

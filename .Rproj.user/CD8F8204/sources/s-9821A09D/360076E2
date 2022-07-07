@@ -1,0 +1,32 @@
+{
+    "id": "360076E2",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1656613380866.0,
+    "source_on_save": false,
+    "relative_order": 28,
+    "properties": {
+        "expression": "group_mean",
+        "caption": "group_mean",
+        "totalObservations": 91,
+        "displayedObservations": 91,
+        "variables": 71,
+        "cacheKey": "BF78BA47",
+        "object": "group_mean",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=group_mean&cache_key=BF78BA47&max_cols=50",
+        "preview": 0
+    },
+    "folds": "",
+    "lastKnownWriteTime": 7935406453079154720,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1656613380866,
+    "read_only": false,
+    "read_only_alternatives": []
+}

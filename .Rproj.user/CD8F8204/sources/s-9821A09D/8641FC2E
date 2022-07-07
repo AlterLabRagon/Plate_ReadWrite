@@ -1,0 +1,25 @@
+{
+    "id": "8641FC2E",
+    "path": "~/random_plates.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1941543519",
+    "contents": "",
+    "dirty": false,
+    "created": 1656520355322.0,
+    "source_on_save": false,
+    "relative_order": 30,
+    "properties": {
+        "cursorPosition": "17,10",
+        "scrollLine": "0",
+        "docOutlineVisible": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1656603823,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1656603823979,
+    "read_only": false,
+    "read_only_alternatives": []
+}

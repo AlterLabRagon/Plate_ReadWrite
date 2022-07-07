@@ -1,0 +1,25 @@
+{
+    "id": "8880D41D",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1656703900024.0,
+    "source_on_save": false,
+    "relative_order": 20,
+    "properties": {
+        "id": "1732a3d79dab478fa9dec1157cbc5b7b",
+        "name": "plate_list",
+        "title": "plate_list"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 4363638566,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1656703900024,
+    "read_only": false,
+    "read_only_alternatives": []
+}

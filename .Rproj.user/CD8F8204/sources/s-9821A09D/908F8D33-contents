@@ -1,0 +1,112 @@
+library(readr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(plater)
+library(platetools)
+library(viridis)
+#' Notes
+#' warn() : warnings 
+#' stop(): to stop running  
+#' user interface -- increase interactivity
+#' plot the plate map to be visually appealing (Show duplicates in a similar shade, etc.)
+#' duplicated -- unique IDs
+#' diff # 
+#' annotated data
+#' plate_map --> colors would be the primary indication --> users specify --> annotated list
+#' What are the possible platemap situations?
+#' 1) all 384 
+#' --> no need to duplicate (assuming duplicates are represented on the platemap)
+#' 2) all 96 plates 
+#' --> need to account for duplicates (assuming they feed a 384 well plate to the machine?)
+#' 3) mixed 384 / 96 well plate situation
+#' 
+#' Parameters:
+#' @param annotated_file_path This string is the location of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
+#' @param plate_map_path This string is the location of the .csv file that contains the plate map. See plater format requirements (e.g. rows are labeled A:H, columns are labeled 1:12, and there is one empty row between wells)
+#' @param IQue_data_path This string is the location of the .csv file contains the IQUE data in long format (not plate format) 
+#' @param duplicate_dir This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
+#' @param measurements This list contains the measurements of interest from the IQue data (e.g. "Median BL2-H of 1")
+#' @param plate_names This is a vector of strings containing the plate names
+#' @param num_386_plates This is a numeric describing the total # of 386 well plates used in the experiment (that show up in the IQUE data file)
+#' @param SAVE_PATH This is a string that denotes where the final combined data will be saved
+#' This script is currently applicable when num_386_plates = 1
+#' Example
+annotated_file_path <- "/Users/maanasa/Downloads/Avidity_Bead_Group_Key_v3_ex.csv"
+plate_map_path <- "/Users/maanasa/Downloads/plate_map_ex.csv"
+IQue_data_path <- "/Users/maanasa/Downloads/20220527_IgG2_Avidity_IgA_with_BeadKey4_JDHrename_Fix_BR22_Mistake.csv"
+duplicate_dir <- TRUE
+measurements <- "Median.BL2.H.of.1"
+SAVE_PATH <- "/Users/maanasa/Downloads/results-plate/"
+#' Read annotated file
+annotated_meta_data <- read_csv(annotated_file_path) 
+#' If people want to label their plate map with index values instead of unique_IDs, they have to change the column name to Unique_ID 
+unique_IDs <- annotated_meta_data["Unique_ID"]
+#' Check that a Unique_ID column exists
+if(!"Unique_ID" %in% colnames(annotated_meta_data))
+{stop(paste('Annotated_file_path must contain a column named "Unique_ID"; current columns include:', paste(unique_IDs,collapse = ', ')))}
+#' Check that all the ids in Unique_ID are unique
+if(anyDuplicated(unique_IDs)){
+  stop(paste('The IDs in Unique_ID must be unique; repeated IDs include:', paste(unique_IDs[duplicated(unique_IDs),],collapse = ', ')))}
+#' Returns experiment plate name
+exp_plate_name <- read.csv(IQue_data_path,header=FALSE,nrows=1)
+exp_plate_name <- exp_plate_name[1]
+#' Could potentially be an annoying safety check, depending on the complexity of the plate name
+if (plate_names != exp_plate_name) {warning(paste('The experiment plate name from the IQue is not equal to the user specified experiment name:',plate_names))}
+print(paste('The experiment plate name from the IQue data is ',exp_plate_name))
+
+#' Reads IQue data and returns abbreviated data with Well IDs and measurements of interest
+#' If there is more than one 386 well plates used, we have to read in the experimental data differently taking account spacing and plate separators
+exp_data <- read.csv(IQue_data_path, skip=1, header=TRUE,nrows=384)
+
+#' Multiple 386 well plate situatiosn - *num_386_plates
+exp_data <- read.csv(IQue_data_path, skip=3, header=TRUE,nrows=384)
+
+
+#' Verify if IQue Data always presents with a "Well.ID" column
+exp_data_abbr <- exp_data %>% select("Well.ID", measurements)
+
+#' Checks if plate map is acceptable to the plater format
+check_plater_format(plate_map_path)
+#' Reads plate data using plateR which converts it into the tidy format (num_wells X num_plates)
+plate_data <- read_plate(file = plate_map_path,sep = ',')
+num_wells <- ncol(plate_data) - 1
+num_samples <- nrow(plate_data) * (ncol(plate_data) - 1)
+cat("Number of wells: ",num_wells)
+cat("Number of samples: ",num_samples)
+#' Check point to make sure all unique identifiers are accounted; is not working
+#' CHECK1 <- plate_data.isin(unique_IDs)
+#' if (CHECK1 == TRUE) {print("All unique identifiers are in the plate map")} else {stop(print("Not all unique identifiers are in the plate map"))}
+#' View(plate_data)
+#' This code is applicable when there are 2 -96 well plates depicted in the plate map
+#' This is used to generate the set up of 384 well plate with replicates performed horizontally or vertically
+
+#' Applicable during situation 2
+plate1_w_d <- c(rbind(plate_data$values,paste(rep(plate_data$values),'-d')))
+plate2_w_d <- c(rbind(plate_data$values.2,paste(rep(plate_data$values.2),'-d')))
+big_well_plate <- matrix(c(plate1_w_d,plate2_w_d), byrow=duplicate_dir, nrow = 16)
+#' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+#' This generates a 386x1 data frame of the plate IDs
+big_well_IDs <- as.vector(t(big_well_plate_ID))
+big_well_IDs <- data.frame(big_well_IDs)
+#' Write plate -- not a great idea; find a better way to visualize
+#' plotting_df <- data.frame(vals = factor(big_well_plate),
+#'                well = num_to_well(1:384, plate = 384))
+#' raw_map(data = plotting_df$vals,well = plotting_df$well,plate = 384)
+
+#' This generates a 386x1 dataframe with the 2 plates and duplicates 
+plate_ID_list <- c(plate1_w_d,plate2_w_d) 
+plate_ID_list <- cbind(plate_ID_list,big_well_IDs)
+#' This merges the experimental data with the unique_IDs and meta data using the plate IDs to produce combined_data and combined_data_abbr
+combined_data <- merge(plate_ID_list,exp_data,by.x = "big_well_IDs",by.y = "Well.ID")
+#' Need to change annotated meta data file to match but otherwise good
+#' combined_data <- merge(combined_data,annotated_meta_data,by.x = "plate_ID_list",by.y="Unique_ID")
+combined_data_abbr <- merge(plate_ID_list,exp_data_abbr,by.x = "big_well_IDs",by.y = "Well.ID")
+#' combined_data_abbr <- merge(combined_data_abbr,annotated_meta_data,by.x = "plate_ID_list",by.y="Unique_ID")
+# Saves the combined data
+write.csv(combined_data,paste(SAVE_PATH, paste(exp_plate_name,'combined_data.csv')))
+write.csv(combined_data_abbr,paste(SAVE_PATH,paste(exp_plate_name,'combined_data_abbr.csv')))
+

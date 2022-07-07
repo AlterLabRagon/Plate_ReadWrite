@@ -1,0 +1,304 @@
+rm(list = ls())
+closeAllConnections()
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(plater)
+library(platetools)
+library(viridis)
+
+
+#' Biana Luminex Data -- 
+#' Plate map consists of 4 96 well plates
+#' Experimental data consists of 2 386 well plates
+biana_IQue_path <- '/Users/maanasa/Downloads/0526_luminexmicrobiomeVG_CHIM.csv'
+biana_plate_path <- '/Users/maanasa/Downloads/PlateLayoutLuminexBiana.csv'
+num_384 <- 2
+#' Excluding warnings to focus on applying code to multiple plates
+
+#' generating the names of the experimental dataframes
+exp_df_names = c()
+edited_plate_ID_list_names = c()
+combined_data_names = c()
+combined_data_abbr = c()
+exp_name = 'biana_exp_data'
+for (i in c(1:num_384))
+{new_df_name <- paste('biana_exp_data',i,sep='_')
+ new_plate_ID <- paste('plate_ID_list',i,sep="_")
+ new_plate_ID <- paste('plate_ID_list',i,sep="_")
+ 
+  exp_df_names <- append(exp_df_names,new_df_name)}
+
+
+#' assigning the experimental data to the names
+if (num_384 > 1)
+{for (i in c(1:num_384))
+  #' if there are 3 lines before the start of the IQue data, 2 + 386(i-1)
+  {idx = 2 + 386*(i-1) 
+  assign(exp_df_names[i],read.csv(biana_IQue_path, skip=idx, header=TRUE,nrows=384))}}
+
+#' Checks if plate map is acceptable to the plater format
+check_plater_format(biana_plate_path)
+
+#' Reads plate data using plateR which converts it into the tidy format (num_wells X num_plates)
+biana_plate_data <- read_plate(file = biana_plate_path,sep = ',')
+num_plates <- ncol(biana_plate_data) - 1
+num_wells <- nrow(biana_plate_data)
+
+#' If 96 well plates are used in the plate map, 2 num_384 must be provided (ncol = num_384*2)
+#' If 384 well plates are used in the map, num_384 plates must be provided (ncol = num_384)
+if (num_wells == 96 & num_plates != 2*num_384) 
+{stop(paste('Insufficient number of 96 well plates were provided in platemap.','# of 96 well plates found: ',num_plates,'.# of 384 well plates used experimentally: ',num_384))}
+if (num_wells == 384 & num_plates != num_384) 
+{stop(paste('Insufficient number of 384 well plates were provided in platemap.','# of 384 well plates found: ',num_plates,'.# of 384 well plates used: ',num_384))}
+
+convert_to_384 <- function(plate_data,plate_name,m,n,duplicate_dir)
+{#'@plate_data <- data frame containing the platemap read into plater format
+  #'@colnames <- a character vector of the column names of platemap
+  #'@m and @n <- numeric that are indices of the 96 well plates that are combined together in 1 384 well plate (e.g. 2 and 3)
+  #'@plate_name <- string that identifies the 384 well plate name
+  #'@duplicate_dir <- boolean that describes if replicates were conducted horizontally or not (TRUE or FALSE)
+  #' ??? perhaps it is a bad idea to assign replicates different unique_ID --> when it comes to the annotated data matching part 
+  plate1_w_d <- c(rbind(as.character(as.matrix(plate_data[,m])),as.character(as.matrix((plate_data[,m])))))
+  print(paste('Plate 1',length(plate1_w_d)))
+  plate2_w_d <- c(rbind(as.character(as.matrix(plate_data[,n])),as.character(as.matrix((plate_data[,n])))))
+  print(paste('Plate 2',length(plate2_w_d)))
+  big_well_plate <- matrix(c(plate1_w_d,plate2_w_d), byrow=duplicate_dir, nrow = 16)
+  #' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+  rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+  colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+  
+  write.csv(big_well_plate, file=paste0('/Users/maanasa/Desktop/Plate_ReadWrite/',plate_name,'.csv'))
+  
+  big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+  #' This generates a 386x1 data frame of the plate IDs
+  plate_well_ID <- as.vector(t(big_well_plate_ID))
+  plate_well_ID <- data.frame(plate_well_ID)
+  #' This generates a 386x1 dataframe with the 2 plates and duplicates 
+  plate_ID_list <- as.vector(t(big_well_plate))
+  plate_ID_list <- cbind(plate_well_ID,plate_ID_list)
+  return(plate_ID_list)}
+
+plate_ID_list1 <- convert_to_384(biana_plate_data,'plate_1',2,3,TRUE)
+plate_ID_list2 <- convert_to_384(biana_plate_data,'plate_2',4,5,TRUE)
+
+biana_annotated_data_path <- '/Users/maanasa/Downloads/biana_fake_annotated_data.csv'
+biana_meta_data <- read_csv(biana_annotated_data_path) 
+unique_IDs <- biana_meta_data["Unique_ID"]
+
+combined_data1 <- merge(plate_ID_list1,biana_exp_data_1,by.x = "plate_well_ID",by.y = "Well.ID")
+combined_data2 <- merge(plate_ID_list2,biana_exp_data_2,by.x = "plate_well_ID",by.y = "Well.ID")
+
+combined_data_wa <- merge(biana_meta_data,combined_data1,by.x = "Unique_ID",by.y="plate_ID_list")
+
+convert_to_384 <- function(plate_data,plate_name,m,n,duplicate_dir)
+{#'@plate_data <- data frame containing the platemap read into plater format
+  #'@colnames <- a character vector of the column names of platemap
+  #'@m and @n <- numeric that are indices of the 96 well plates that are combined together in 1 384 well plate (e.g. 2 and 3)
+  #'@duplicate_dir <- boolean that describes if replicates were conducted horizontally or not (TRUE or FALSE)
+  #' ??? perhaps it is a bad idea to assign replicates different unique_ID --> when it comes to the annotated data matching part 
+  plate1_w_d <- c(rbind(as.character(as.matrix(plate_data[,m])),as.character(as.matrix((plate_data[,m])))))
+  print(paste('Plate 1',length(plate1_w_d)))
+  plate2_w_d <- c(rbind(as.character(as.matrix(plate_data[,n])),as.character(as.matrix((plate_data[,n])))))
+  print(paste('Plate 2',length(plate2_w_d)))
+  big_well_plate <- matrix(c(plate1_w_d,plate2_w_d), byrow=duplicate_dir, nrow = 16)
+  #' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+  rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+  colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+  
+  m <- (matrix('',nrow = 18,ncol = 25)) # 384 well plate
+  m[2,1] <- c(plate_name)
+  m[3:18,2:25] <- big_well_plate
+  rownames(big_well_plate)<- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+  colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+  m[3:18,1] <- rownames(big_well_plate)
+  m[2,2:25] <- colnames(big_well_plate)
+  write.table(m, file='/Users/maanasa/Desktop/Plate_ReadWrite/big_well_plate_updated_v3.csv',row.names=FALSE, col.names=FALSE, sep=",")
+  
+  
+  big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+  #' This generates a 386x1 data frame of the plate IDs
+  big_well_IDs <- as.vector(t(big_well_plate_ID))
+  big_well_IDs <- data.frame(big_well_IDs)
+  #' This generates a 386x1 dataframe with the 2 plates and duplicates 
+  plate_ID_list <- c(plate1_w_d,plate2_w_d) 
+  plate_ID_list <- cbind(big_well_IDs,plate_ID_list)
+  return(plate_ID_list)}
+}
+
+process_96_well_plates <- function(plate_data,colnames,m,n,duplicate_dir)
+{
+#'@plate_data <- data frame containing the platemap read into plater format
+#'@colnames <- a character vector of the column names of platemap
+#'@m and @n <- numeric that are indices of the 96 well plates that are combined together in 1 384 well plate (e.g. 2 and 3)
+#'m and n <- strings that are the column names of the 96 well plates that are combined together (e.g 'values' and 'values.2')  
+#'@duplicate_dir <- boolean that describes if replicates were conducted horizontally or not (TRUE or FALSE)
+#' ??? perhaps it is a bad idea to assign replicates different unique_ID --> when it comes to the annotated data matching part 
+plate1_w_d <- c(rbind(plate_data[,colnames[m]],rep(plate_data[,colnames[m]]),'-d'))
+print(colnames[m])
+plate2_w_d <- c(rbind(plate_data[,colnames[n]],rep(plate_data[,colnames[n]]),'-d'))
+print(colnames[n])
+big_well_plate <- matrix(c(plate1_w_d,plate2_w_d), byrow=duplicate_dir, nrow = 16)
+print('big well')
+#' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+write.csv(big_well_plate,'/Users/maanasa/Desktop/Plate_ReadWrite/big_well_plate.csv',row.names=TRUE)
+
+
+big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+#' This generates a 386x1 data frame of the plate IDs
+big_well_IDs <- as.vector(t(big_well_plate_ID))
+big_well_IDs <- data.frame(big_well_IDs)
+#' This generates a 386x1 dataframe with the 2 plates and duplicates 
+print(length(plate1_w_d))
+plate_ID_list <- c(plate1_w_d,plate2_w_d) 
+plate_ID_list <- cbind(plate_ID_list,big_well_IDs)
+return(plate_ID_list)}
+
+process_96_well_plates2 <- function(plate_data,colnames,m,n,duplicate_dir)
+{
+  #'@plate_data <- data frame containing the platemap read into plater format
+  #'@colnames <- a character vector of the column names of platemap
+  #'@m and @n <- numeric that are indices of the 96 well plates that are combined together in 1 384 well plate (e.g. 2 and 3)
+  #'@duplicate_dir <- boolean that describes if replicates were conducted horizontally or not (TRUE or FALSE)
+  #' ??? perhaps it is a bad idea to assign replicates different unique_ID --> when it comes to the annotated data matching part 
+  plate1_w_d <- c(rbind(as.character(as.matrix(plate_data[,m])),as.character(as.matrix((plate_data[,m])))))
+  print(paste('Plate 1',colnames[m],length(plate1_w_d)))
+  plate2_w_d <- c(rbind(as.character(as.matrix(plate_data[,n])),as.character(as.matrix((plate_data[,n])))))
+  print(paste('Plate 2',colnames[n],length(plate2_w_d)))
+  big_well_plate <- matrix(c(plate1_w_d,plate2_w_d), byrow=duplicate_dir, nrow = 16)
+  print('big well')
+  #print(dim(big_well_plate))
+  #' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+  rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+  colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+  #print(colnames(big_well_plate))
+  big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+  #' This generates a 386x1 data frame of the plate IDs
+  big_well_IDs <- as.vector(t(big_well_plate_ID))
+  big_well_IDs2 <- as.vector(t(big_well_plate)) 
+  big_well_IDs2 <- data.frame(big_well_IDs2)
+  #' This generates a 386x1 dataframe with the 2 plates and duplicates 
+  plate_ID_list <- c(plate1_w_d,plate2_w_d) 
+  plate_ID_list <- cbind(big_well_IDs,plate_ID_list)
+  return(plate_ID_list)}
+
+## Merging duplicates in alternating fashion
+long <- plate_data %>%
+  pivot_longer(everything()) %>%
+  select(!name)
+
+
+
+plate_ID_1 <- process_96_well_plates(biana_plate_data,colnames(biana_plate_data),2,3,TRUE)
+plate_ID_2 <- process_96_well_plates2(biana_plate_data,colnames(biana_plate_data),2,3,TRUE)
+
+if (num_wells == 96)
+{plate1_w_d_r <- c(rbind(plate_data$values,paste(rep(plate_data$values),'-d')))
+plate2_w_d_r <- c(rbind(plate_data$values.2,paste(rep(plate_data$values.2),'-d')))
+big_well_plate_r <- matrix(c(plate1_w_d_r,plate2_w_d_r), byrow=duplicate_dir, nrow = 16)
+rownames(big_well_plate_r) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+colnames(big_well_plate_r) <- c('01','02','03','04','05','06','07','08','09',10:24)
+big_well_plate_ID_r <- outer(rownames(big_well_plate_r), colnames(big_well_plate_r), paste, sep="")
+big_well_IDs_r <- as.vector(t(big_well_plate_ID_r))
+big_well_IDs_r <- data.frame(big_well_IDs_r)
+#' This generates a 386x1 dataframe with the 2 plates and duplicates 
+plate_ID_list_r <- c(plate1_w_d_r,plate2_w_d_r) 
+plate_ID_list_r <- cbind(big_well_IDs_r,plate_ID_list_r)
+}
+
+if (num_wells == 96)
+{plate1_w_d_r <- c(rbind(plate_data$values,rep(plate_data$values)))
+plate2_w_d_r <- c(rbind(plate_data$values.2,rep(plate_data$values.2)))
+big_well_plate_r <- matrix(c(plate1_w_d_r,plate2_w_d_r), byrow=duplicate_dir, nrow = 16)
+rownames(big_well_plate_r) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+colnames(big_well_plate_r) <- c('01','02','03','04','05','06','07','08','09',10:24)
+big_well_plate_ID_r <- outer(rownames(big_well_plate_r), colnames(big_well_plate_r), paste, sep="")
+big_well_IDs_r <- as.vector(t(big_well_plate_ID_r))
+big_well_IDs_r <- data.frame(big_well_IDs_r)
+#' This generates a 386x1 dataframe with the 2 plates and duplicates 
+plate_ID_list_r <- c(plate1_w_d_r,plate2_w_d_r) 
+plate_ID_list_r <- cbind(big_well_IDs_r,plate_ID_list_r)
+}
+
+#' This generates a matrix of the plate IDs of a 386 well plate (A01 - P24)
+rownames(big_well_plate) <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+colnames(big_well_plate) <- c('01','02','03','04','05','06','07','08','09',10:24)
+big_well_plate_ID <- outer(rownames(big_well_plate), colnames(big_well_plate), paste, sep="")
+#' This generates a 386x1 data frame of the plate IDs
+big_well_IDs <- as.vector(t(big_well_plate_ID))
+big_well_IDs <- data.frame(big_well_IDs)
+
+#' This generates a 386x1 dataframe with the 2 plates and duplicates 
+plate_ID_list <- c(plate1_w_d,plate2_w_d) 
+plate_ID_list <- cbind(plate_ID_list,big_well_IDs)
+#' This merges the experimental data with the unique_IDs and meta data using the plate IDs to produce combined_data and combined_data_abbr
+combined_data <- merge(plate_ID_list,exp_data,by.x = "big_well_IDs",by.y = "Well.ID")
+}
+
+
+
+
+
+
+
+
+for (name in exp_df_names)
+{i <- name.index
+idx <- 2 + 386*(i-1)
+name <- read.csv(IQue_data_path, skip=idx, header=TRUE,nrows=384)
+}
+
+biana_IQue_data <- read.csv(IQue_data_path, skip=1, header=TRUE,nrows=384*num_plates_384)
+#' Reads IQue data and returns abbreviated data with Well IDs and measurements of interest
+#' If there is more than one 386 well plates used, we have to read in the experimental data differently taking account spacing and plate separators
+exp_data <- read.csv(IQue_data_path, skip=1, header=TRUE,nrows=384)
+
+#' Checks if plate map is acceptable to the plater format
+check_plater_format(biana_plate_path)
+#' Reads plate data using plateR which converts it into the tidy format (num_wells X num_plates)
+biana_plate_data <- read_plate(file = biana_plate_path,sep = ',')
+num_wells <- ncol(plate_data) - 1
+num_samples <- nrow(plate_data) * (ncol(plate_data) - 1)
+cat("Number of wells: ",num_wells)
+cat("Number of samples: ",num_samples)
+#' Check point to make sure all unique identifiers are accounted; is not working
+#' CHECK1 <- plate_data.isin(unique_IDs)
+#' if (CHECK1 == TRUE) {print("All unique identifiers are in the plate map")} else {stop(print("Not all unique identifiers are in the plate map"))}
+#' View(plate_data)
+#' This code is applicable when there are 2 -96 well plates depicted in the plate map
+#' This is used to generate the set up of 384 well plate with replicates performed horizontally or vertically
+
+#' isin()
+#' all( uniqueIDs %in% unlist(platemap) )
+
+
+
+
+
+
+# Play around with Vicki's Files
+plate_layout_path <- '/Users/maanasa/Downloads/Plate Layout.csv'
+iQue_output_path <- '/Users/maanasa/Downloads/iQue Output file luminex PLATE1.csv'
+check_plater_format(plate_layout_path)
+V_plate_data <- read_plate(file = plate_layout_path,sep = ',')
+
+### 384 well plate and a 96 well plate
+plate_layout_path2 <- '/Users/maanasa/Downloads/Plate Layout2.csv'
+V_plate_data2 <- read_plate(file = plate_layout_path2,sep = ',')
+
+### 96 well plate separate
+plate_layout_path3 <- '/Users/maanasa/Downloads/Plate Layout3.csv'
+### 384 well plate separate
+plate_layout_path4 <- '/Users/maanasa/Downloads/Plate Layout4.csv'
+
+#' if the there are multiple separate platemap csv files, we can use read_plates(files,names) where files is a character vector of plater formatted plates paths and names is a character vector of plate names
+read_plates(c(plate_layout_path3,plate_layout_path4))
+
+#' IDs 
+library(stringr)
+random <- unique_IDs %notin%  unlist(plate_data) %>% as.character() %>% str_to_title() 
+random <- unique_IDs %>% mutate(Unique_ID %in% plate_map

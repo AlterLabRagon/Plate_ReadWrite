@@ -1,0 +1,15 @@
+### Random QC
+
+
+summary_Stats <- combined_data_1 %>% aggregate(combined_data_1, by = "unique_id", FUN = function(x) c(mn = mean(x), md = median(x), sd = sd(x) ) )
+
+group_mean <- aggregate(combined_data_1[,6:ncol(combined_data_1)], list(combined_data_1$unique_id), FUN = function(x) c(mn = mean(x), md = median(x), sd = sd(x)) )
+
+group_mean <- aggregate(combined_data_1[,6:ncol(combined_data_1)], list(combined_data_1$unique_id), summary)
+
+
+group_mean <- aggregate(weight ~ feed, data = df, mean) # Equivalent
+group_mean <-aggregate(weight ~ feed, data = df, mean)
+means <- aggregate(.~unique_id, combined_data_1, mean)
+> aggregate(. ~ id1+id2, data = x, FUN = function(x) c(mn = mean(x), n = length(x) ) )
+
