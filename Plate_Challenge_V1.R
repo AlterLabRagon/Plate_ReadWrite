@@ -136,3 +136,7 @@ write.csv(summary_stats_df,file=paste0(save_path,'summary_stats',exp_name,'.csv'
 #' 4) Decide on whether to make duplicated unique_ids in annotated data an error or a warning
 #' 6) Decide on whether to read in the plate names and # of 384 plates from the experimental data during format checks or not (currently this functionality is commented out)
 #' 5) Gather and make unit testing datasets to evaluate this
+#' 
+#' 
+#' Notes 
+#' ln95-100 : outer if statement that determines certain baseline conditions before going into the if statements & edge case (error out : informative)
