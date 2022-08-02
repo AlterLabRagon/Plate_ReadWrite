@@ -27,4 +27,4 @@ The Process
 
 ![image](https://user-images.githubusercontent.com/100164917/182449859-7ecb52af-7c9c-40c2-b919-5c7b4f012931.png)
 
-You can always contact me with questions at mmendu1@mgh.harvard.edu
+You can always contact me with questions at maanasa_mendu@college.harvard.edu or mmendu1@mgh.harvard.edu
