@@ -84,13 +84,6 @@ plate_data_tidy <- plate_data %>% pivot_longer(names_to = "Plate",values_to = "u
 num_plates <- ncol(plate_data) - 1
 num_wells <- nrow(plate_data)
 
-#' producing the masked experimental data using QC parameter
-Count_col <- exp_df[,which(grepl("Count",colnames(exp_df)))]
-Median_col <- exp_df[,which(grepl("Median",colnames(exp_df)))]
-mask <- ifelse(Count_col[,] > QC_check, TRUE, FALSE)
-edited_Median_col <- replace(Median_col, !mask, NA)
-QC_exp_data <- cbind(Plate = exp_df$Plate,Well.ID = exp_df$Well.ID,edited_Median_col)
-
 #' If 96 well plates are used in the plate map, 2xnum_384 96 well plates must be provided in the platemap
 if (num_wells == 96 & num_plates != 2*num_384) 
   {stop(paste('Insufficient number of 96 well plates were provided in platemap.','# of 96 well plates found: ',num_plates,'.# of 384 well plates used experimentally: ',num_384))}
@@ -101,8 +94,7 @@ if (num_wells == 384 & num_plates != num_384)
 if (num_wells == 384 & num_plates == num_384) 
   #' Well IDs and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the annotated meta data
   {pre_combined_data <- left_join(plate_data_tidy,sample_meta_data,by = "unique_id")
-  combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID"))
-  QC_masked_data <- merge(pre_combined_data,QC_exp_data,by = c("Plate","Well.ID"))}
+  combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID"))}
 #' If the # of 96 well plates detected from the platemap is equal to twice the number of 384 well plates specified by the user, we assume that we need to account for duplicates using convert_to()
 if (num_wells == 96 & num_plates == 2*num_384) 
   #' Getting a new plate ID list which includes duplicates when mapping well IDs to unique sample IDs by looping over each 384 well plate
@@ -112,31 +104,27 @@ if (num_wells == 96 & num_plates == 2*num_384)
     new_plate_ID_list <- do.call(rbind,plate_ID_list)
     #' New plate well ID list and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the annotated meta data
     pre_combined_data <- left_join(new_plate_ID_list,sample_meta_data,by = "unique_id")  
-    combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID"))
-    QC_masked_data <- merge(pre_combined_data,QC_exp_data,by = c("Plate","Well.ID"))}
-#' extracting selected measurements to get abbreviated combined data
+    combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID"))}
+
+#' producing the masked experimental data using QC parameter
+Count_col <- exp_df[,which(grepl("Count",colnames(exp_df)))]
+Median_col <- exp_df[,which(grepl("Median",colnames(exp_df)))]
+if (dim(Count_col)[2] == dim(Median_col)[2])
+  {mask <- ifelse(Count_col[,] > QC_check, TRUE, FALSE)
+   edited_Median_col <- replace(Median_col, !mask, NA)
+   QC_exp_data <- cbind(Plate = exp_df$Plate,Well.ID = exp_df$Well.ID,edited_Median_col)
+   QC_masked_data <- merge(pre_combined_data,QC_exp_data,by = c("Plate","Well.ID"))
+   write.csv(QC_masked_data, file=paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv'))}
+   
+#' Calculate median, mean, and standard deviation for the experimental data columns
+summary_stats <- QC_masked_data %>% group_by(unique_id,Plate) %>% summarise(across(c((anno_col + 3):(ncol(QC_masked_data)-1)),funs(mean, median, sd)))
+summary_stats_df <- right_join(sample_meta_data,summary_stats,by = "unique_id") 
+
+#' Extracting selected measurements to get abbreviated combined data
 if (length(measurements) != 0)
   {combined_data_abbr <- select(combined_data,"unique_id","Plate","Well.ID",measurements)
   write.csv(combined_data_abbr, file=paste0(save_path,'combined_data_abbr_',exp_name,'.csv'))}
 
-#' Calculate median, mean, and standard deviation for the experimental data columns
-#' Note: if the controls are labeled with the same identifier, they will be averaged across despite being from different plates
-summary_stats <- QC_masked_data %>% group_by(unique_id) %>% summarise(across(c((anno_col + 3):(ncol(QC_masked_data)-1)),funs(mean, median, sd)))
-summary_stats_df <- right_join(sample_meta_data,summary_stats,by = "unique_id") 
-
-#' Saving combined data, QC masked, and summary stats data files
+#' Saving combined data and summary stats data files
 write.csv(combined_data, file=paste0(save_path,'combined_data_',exp_name,'.csv'))
-write.csv(QC_masked_data, file=paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv'))
 write.csv(summary_stats_df,file=paste0(save_path,'summary_stats',exp_name,'.csv'))
-
-#' Issues to fix still
-#' 1) Summary stats for the rows corresponding to the controls are not properly being calculated. It returns NA maybe due to the different group sizes?
-#' 2) In general, how to deal with controls in the summary stats 
-#' 3) Add functionality for 96 well plates and 48 well plate maps, which might be useful for functional assays?
-#' 4) Decide on whether to make duplicated unique_ids in annotated data an error or a warning
-#' 6) Decide on whether to read in the plate names and # of 384 plates from the experimental data during format checks or not (currently this functionality is commented out)
-#' 5) Gather and make unit testing datasets to evaluate this
-#' 
-#' 
-#' Notes 
-#' ln95-100 : outer if statement that determines certain baseline conditions before going into the if statements & edge case (error out : informative)
