@@ -1,5 +1,5 @@
 # Plate_ReadWrite
- Format IQue data using platemap and annotated meta data
+ Format iQue flow cytometer data using platemap and annotated meta data
 
 Inputs
 - Platemap, which has spatially mapped out unique identifiers or index values
