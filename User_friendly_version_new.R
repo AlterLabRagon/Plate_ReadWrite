@@ -9,6 +9,14 @@ options(warn=1)
 
 ### Required parameters (to change)
 ##########################################################################
+#' @param duplicate_dir This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
+#' @param measurements This list contains the measurements of interest from the IQue data (e.g. "Median BL2-H of 1"). It can be empty.
+#' @param num_386 This is a numeric describing the total # of 386 well plates used in the experiment (that show up in the IQUE data file)
+#' @param num_96 This is a numeric describing the total # of 96 well plates used in the experiment (that show up in the IQUE data file)
+#' @param num_well_in_platemap This is a numeric describing the # of wells used in the platemap (options are 96 and 384)
+#' @param exp_name This is a string that describes the name of the experiment
+#' @param save_path This is a string that denotes where the final combined data will be saved
+#' @param QC_check This is a numeric that is used as the minimum bead count threshold  
 duplicate_dir <- TRUE 
 measurements <- NULL
 num_384 <- 4
@@ -17,10 +25,13 @@ num_well_in_platemap <- 96
 exp_name <- 'Bead_party'
 save_path <- 'Example_markdown/'
 QC_check <- 40
-platemap_long <- FALSE
-  
+
 ### Required files (leave as NUlL to be prompted with a file pop up)
 ##########################################################################
+#' @param annotated_path This string is the path of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
+#' @param platemap_path This string is the path of the .csv file that contains the plate map. See plater format requirements (e.g. rows are labeled A:H, columns are labeled 1:12, and there is one empty row between wells)
+#' @param datakey_path This string is the path of the .csv file that contains the beadmap, describing the mapping between the experimental plates, platemap, beadtype, and secondaries used
+#' @param IQue_path This string is the path of the .csv file contains the IQUE data in long format (not plate format) 
 annotated_path <- 'Example/Data/annotated_data.csv'
 platemap_path <- 'Example/Data/platemap_small.csv'
 datakey_path <- 'Example/Data/beadmap_small.csv'
@@ -28,28 +39,39 @@ IQue_path <- 'Example/Data/ique_data.csv'
   
 ### Optional parameters (to change)
 ##########################################################################
+#' @param QC_check This is a numeric that is used as the minimum bead count threshold  
+#' @param corr_plot This is a boolean that is set to TRUE when you want to plot correlation for duplicates for each plate and unique_id 
+#' @param platemap_long_format This is a boolean that is set to TRUE when your platemap is already in long format with Well IDs (A01) mapped to the samples
 QC_check <- NULL
 plate_names <- NULL
 corr_plot <- NULL
 platemap_long_format <- NULL
 
+#####################
+
+# STOP EDITING HERE!
+# Run code as "source" once parameters are set
+# In Rstudio: push the "Source" button in the upper right
+# In R terminal: run > source('User_friendly_version_new.R')
+
+###############################
+
+
+
+
+
+
+
+
+
+
+
+
+### CODE TO RUN
+##########################################################################
+
 ### Information about parameters
 ##########################################################################
-#' @param annotated_path This string is the path of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
-#' @param platemap_path This string is the path of the .csv file that contains the plate map. See plater format requirements (e.g. rows are labeled A:H, columns are labeled 1:12, and there is one empty row between wells)
-#' @param datakey_path This string is the path of the .csv file that contains the beadmap, describing the mapping between the experimental plates, platemap, beadtype, and secondaries used
-#' @param IQue_path This string is the path of the .csv file contains the IQUE data in long format (not plate format) 
-#' @param duplicate_dir This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
-#' @param measurements This list contains the measurements of interest from the IQue data (e.g. "Median BL2-H of 1"). It can be empty.
-#' @plate_names This is a vector of strings containing the plate names
-#' @param num_386 This is a numeric describing the total # of 386 well plates used in the experiment (that show up in the IQUE data file)
-#' @param num_96 This is a numeric describing the total # of 96 well plates used in the experiment (that show up in the IQUE data file)
-#' @param num_well_in_platemap This is a numeric describing the # of wells used in the platemap (options are 96 and 384)
-#' @param save_path This is a string that denotes where the final combined data will be saved
-#' @param exp_name This is a string that describes the name of the experiment
-#' @param QC_check This is a numeric that is used as the minimum bead count threshold  
-#' @param corr_plot This is a boolean that is set to TRUE when you want to plot correlation for duplicates for each plate and unique_id 
-#' @param platemap_long_format This is a boolean that is set to TRUE when your platemap is already in long format with Well IDs (A01) mapped to the samples
 
 # Prompting a file pop up to get the annotated, platemap, datakey, and IQue data
 if(is.null(annotated_path))
@@ -74,12 +96,6 @@ if(is.null(corr_plot))
 if(is.null(platemap_long_format))
   {platemap_long_format <- FALSE}
 
-
-### CODE TO RUN
-##########################################################################
-##########################################################################
-##########################################################################
-
 ### Libraries
 ##########################################################################
 library(readr)
@@ -90,7 +106,7 @@ library(plater)
 library(tibble)
 library(stats)
 
-# 
+# Creates a save_path directory 
 if(!dir.exists(save_path))
   {dir.create(save_path,recursive = 'T')}
 
@@ -313,9 +329,13 @@ write.csv(combined_data, file=paste0(save_path,'combined_data_',exp_name,'.csv')
 write.csv(QC_masked_data, file=paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv'))
 write.csv(summary_stats_edited,file=paste0(save_path,'summary_stats',exp_name,'.csv'))
 
+if(file.exists(paste0(save_path,'summary_stats',exp_name,'.csv')) &
+   file.exists(paste0(save_path,'combined_data_',exp_name,'.csv')) &
+   file.exists(paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv')))
+{print('Files were successfully created. Check ',save_path)}
+
 sink(type = "message")
 close(logger)
-readLines(get_log_file_name())
 
 ### Getting correlation plots 
 ##########################################################################
