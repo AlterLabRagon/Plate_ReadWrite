@@ -21,10 +21,10 @@ platemap_long <- FALSE
   
 ### Required files (leave as NUlL to be prompted with a file pop up)
 ##########################################################################
-annotated_path <- NULL
-platemap_path <- NULL
-datakey_path <- NULL
-IQue_path <- NULL
+annotated_path <- 'Example/Data/annotated_data.csv'
+platemap_path <- 'Example/Data/platemap_small.csv'
+datakey_path <- 'Example/Data/beadmap_small.csv'
+IQue_path <- 'Example/Data/ique_data.csv'
   
 ### Optional parameters (to change)
 ##########################################################################
