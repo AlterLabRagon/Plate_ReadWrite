@@ -91,8 +91,8 @@ library(tibble)
 library(stats)
 library(devtools)
 
-source_url("https://raw.githubusercontent.com/AlterLabRagon/Plate_ReadWrite/main/Src/Format_checks2.R")
-source_url("https://raw.githubusercontent.com/AlterLabRagon/Plate_ReadWrite/main/Src/convert_384..R")
+source('Src/Format_checks2.R')
+source('Src/convert_384..R')
 
 ### Create an Error and Warning Log Folder and File
 dir.create(file.path(save_path,'Log'))
