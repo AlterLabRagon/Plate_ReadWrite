@@ -1,4 +1,4 @@
-To use Plate_ReadWrite you can download the user_friendly_version script. You can find example data and an annotated R Markdown Guide in the examples section. 
+To use Plate_ReadWrite you can download the User_friendly_version.R script. You can find example data and an annotated R Markdown Guide in the examples section. 
 
 # Plate_ReadWrite Objective
  Format iQue flow cytometer data using platemap and annotated meta data
