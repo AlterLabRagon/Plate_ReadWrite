@@ -9,43 +9,67 @@ options(warn=1)
 
 ### Required parameters (to change)
 ##########################################################################
-#' @param duplicate_dir This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
+#' @param duplicate_horizontal This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
 #' @param measurements This list contains the measurements of interest from the IQue data (e.g. "Median BL2-H of 1"). It can be empty.
 #' @param num_386 This is a numeric describing the total # of 386 well plates used in the experiment (that show up in the IQUE data file)
 #' @param num_96 This is a numeric describing the total # of 96 well plates used in the experiment (that show up in the IQUE data file)
 #' @param num_well_in_platemap This is a numeric describing the # of wells used in the platemap (options are 96 and 384)
 #' @param exp_name This is a string that describes the name of the experiment
 #' @param save_path This is a string that denotes where the final combined data will be saved
-#' @param QC_check This is a numeric that is used as the minimum bead count threshold  
-duplicate_dir <- TRUE 
+#' @param QC_min_bead_count This is a numeric that is used as the minimum bead count threshold  
+duplicate_horizontal <- TRUE 
 measurements <- NULL
 num_384 <- 4
 num_96 <- 0
 num_well_in_platemap <- 96
 exp_name <- 'Bead_party'
 save_path <- 'Example_markdown/'
-QC_check <- 40
+QC_min_bead_count <- 40
 
 ### Required files (leave as NUlL to be prompted with a file pop up)
 ##########################################################################
-#' @param annotated_path This string is the path of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
+#' @param sample_annotation_path This string is the path of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
 #' @param platemap_path This string is the path of the .csv file that contains the plate map. See plater format requirements (e.g. rows are labeled A:H, columns are labeled 1:12, and there is one empty row between wells)
-#' @param datakey_path This string is the path of the .csv file that contains the beadmap, describing the mapping between the experimental plates, platemap, beadtype, and secondaries used
+#' @param plate_annotation_path This string is the path of the .csv file that contains the beadmap, describing the mapping between the experimental plates, platemap, beadtype, and secondaries used
 #' @param IQue_path This string is the path of the .csv file contains the IQUE data in long format (not plate format) 
-annotated_path <- 'Example/Data/annotated_data.csv'
+sample_annotation_path <- 'Example/Data/sample_annotation_data.csv'
 platemap_path <- 'Example/Data/platemap_small.csv'
-datakey_path <- 'Example/Data/beadmap_small.csv'
+plate_annotation_path <- 'Example/Data/beadmap_small.csv'
 IQue_path <- 'Example/Data/ique_data.csv'
+
+## Skips the input files
+skip_annotation <- 
+skip_plate_annotation <- 
   
+plate_annotation_file <- FALSE  
+if(plate_annotation_file == TRUE)
+  {secondary_name <- NULL
+  num_platemap <- NULL
+  rep_or_not <- ifelse(num_384 !=0 & num_well_in_platemap == 96,TRUE,FALSE)
+  num_actual_plates <- ifelse(num_384 != 0,num_384,num_96)
+  plate_rep <- ifelse(rep_or_not,num_actual_plates*2,num_actual_plates)
+  bm_plate_list <- rep(c(1:num_actual_plates),plate_rep)
+  bm_platemap_list <- rep(c(1:num_platemap),plate_rep)
+  bm_beadtype_list <- rep(1,plate_rep)
+  bm_secondary_list <-  rep(secondary_name,plate_rep)}
+
+
+  
+
 ### Optional parameters (to change)
 ##########################################################################
-#' @param QC_check This is a numeric that is used as the minimum bead count threshold  
+#' @param QC_min_bead_count This is a numeric that is used as the minimum bead count threshold  
 #' @param corr_plot This is a boolean that is set to TRUE when you want to plot correlation for duplicates for each plate and unique_id 
 #' @param platemap_long_format This is a boolean that is set to TRUE when your platemap is already in long format with Well IDs (A01) mapped to the samples
-QC_check <- NULL
+#' @param num_platemap This is the number of plates in the platemap
+QC_min_bead_count <- NULL
 plate_names <- NULL
 corr_plot <- NULL
 platemap_long_format <- NULL
+num_platemap <- NULL
+
+### Beadmap Generator
+#####################
 
 #####################
 
@@ -73,13 +97,13 @@ platemap_long_format <- NULL
 ### Information about parameters
 ##########################################################################
 
-# Prompting a file pop up to get the annotated, platemap, datakey, and IQue data
-if(is.null(annotated_path))
-  {annotated_path = rstudioapi::selectFile(caption = "Select Annotated Data File",label = "Select Annotated Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
+# Prompting a file pop up to get the sample_annotation, platemap, plate_annotation, and IQue data
+if(is.null(sample_annotation_path))
+  {sample_annotation_path = rstudioapi::selectFile(caption = "Select sample_annotation Data File",label = "Select sample_annotation Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
 if(is.null(platemap_path))
   {platemap_path <- rstudioapi::selectFile(caption = "Select Platemap File",label = "Select Platemap File",filter = "CSV Files (*.csv)",existing = TRUE)}
-if(is.null(datakey_path))
-  {datakey_path <- rstudioapi::selectFile(caption = "Select Data Key File",label = "Select Data Key File",filter = "CSV Files (*.csv)",existing = TRUE)}
+if(is.null(plate_annotation_path))
+  {plate_annotation_path <- rstudioapi::selectFile(caption = "Select Data Key File",label = "Select Data Key File",filter = "CSV Files (*.csv)",existing = TRUE)}
 if(is.null(IQue_path))
   {IQue_path <- rstudioapi::selectFile(caption = "Select iQue Data File",label = "Select iQue Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
 # If no plate names are provided, integer names will be assigned to the plates
@@ -87,8 +111,8 @@ if(is.null(plate_names))
   {actual_num_plate <- ifelse(num_96 == 0, num_384, num_96)
   plate_names <- c(1:actual_num_plate)}
 # If no QC check is provided, a minimum bead count threshold of 20 is set
-if(is.null(QC_check))
-  {QC_check <- 20}
+if(is.null(QC_min_bead_count))
+  {QC_min_bead_count <- 20}
 # If no option is provided for plotting correlation plot, it is set to FALSE
 if(is.null(corr_plot))
   {corr_plot <- FALSE}
@@ -127,14 +151,14 @@ sink(logger, append = TRUE, type="message")
 
 ### Perform Formatting Checks
 ##########################################################################
-check_annotated_data(annotated_path)
+check_sample_annotation_data(sample_annotation_path)
 check_exp_data(IQue_path,measurements,num_384,num_96)
 check_plater_format(platemap_path)
-check_data_key(datakey_path)
+check_data_key(plate_annotation_path)
 
 ### Get Beadmap Data
 ##########################################################################
-beadmap_data <- read_csv(datakey_path)
+beadmap_data <- read_csv(plate_annotation_path)
 colnames(beadmap_data) <- tolower(colnames(beadmap_data))
 platemap_col <- grep('platemap',colnames(beadmap_data))
 num_exp <- length(unique(beadmap_data$plate))
@@ -144,6 +168,8 @@ num_secondary <- length(unique(beadmap_data$secondary))
 
 if (!num_well_in_platemap %in% c(96, 384))
   {stop('The number of wells in the platemap must be 96 or 384')}
+if (num_96 !=0 & num_384 !=0)
+  {stop('You can only have 96 or 384 well plates in the data not both!')}
 
 ### Check that the # of different plates specified by the data key matches the # of plates run in the experiment
 ##########################################################################
@@ -157,9 +183,9 @@ if (num_well_in_platemap == 384 & num_exp != num_platemap | num_well_in_platemap
     else
       {stop(paste0('The number of platemaps provided does not match number of experimental plates, considering the different bead sets and secondaries used.','\n Number of beadtypes: ',num_beadtype,'\n Number of secondaries: ',num_secondary,'\n Number of plates in the platemap: ',num_platemap,'\n Number of plates used experimentally: ',num_exp))}}
 
-### Get Annotated Meta Data
+### Get sample_annotation Meta Data
 ##########################################################################
-sample_meta_data <- read_csv(annotated_path) 
+sample_meta_data <- read_csv(sample_annotation_path) 
 colnames(sample_meta_data) <- tolower(colnames(sample_meta_data))
 anno_col <- ncol(sample_meta_data) - 1
 sample_meta_data$unique_id <- as.character(sample_meta_data$unique_id)
@@ -252,7 +278,7 @@ if (num_well_in_platemap == 96 & num_384 != 0)
   plate_data_tidy <- plate_data %>% pivot_longer(names_to = "Plate",values_to = "unique_id",cols = -Well.ID)
   plate_ID_list <- list()
   for(i in c(1:(num_384)))
-    {plate_ID_list[[i]] <- convert_to(plate_data_tidy,i,plate_names[i],(i*2-1),i*2,duplicate_dir,save_path)}
+    {plate_ID_list[[i]] <- convert_to(plate_data_tidy,i,plate_names[i],(i*2-1),i*2,duplicate_horizontal,save_path)}
   new_plate_ID_list <- do.call(rbind,plate_ID_list)
   colnames(new_plate_ID_list) <- c("Plate","Well.ID","unique_id_edit")
 }
@@ -272,7 +298,7 @@ if (num_well_in_platemap == 384 | num_well_in_platemap == 96 & num_96 != 0)
   plate_data_tidyr <- cbind(plate_data_tidy,plate_data_tidier)
   # Filter out unique_id that are NA (we have to do this because of how the edited unique IDs are constructed)
   plate_data_tidyr <- plate_data_tidyr %>% dplyr::filter(unique_id != 'NA')
-  # Well IDs and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the annotated meta data
+  # Well IDs and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the sample_annotation meta data
   pre_combined_data <- left_join(plate_data_tidyr,sample_meta_data,by = "unique_id")
   combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID")) }
 
@@ -283,7 +309,7 @@ if (num_well_in_platemap == 96 & num_384 !=0)
   plate_data_tidyr <- cbind(new_plate_ID_list,plate_data_tidier)
   # Filter out unique_id that are NA (we have to do this because of how the edited unique IDs are constructed)
   plate_data_tidyr <- plate_data_tidyr %>% dplyr::filter(unique_id != 'NA')
-  # Well IDs and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the annotated meta data
+  # Well IDs and Sample Meta data are combined with left join to ensure controls are included within the combined data even if they are not found in the sample_annotation meta data
   pre_combined_data <- left_join(plate_data_tidyr,sample_meta_data,by = "unique_id")
   combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID")) }
 
@@ -298,12 +324,12 @@ median_int <- gsub('.*Median.BL2.H.of.',"",colnames(Median_col))
 # Reordering the count columns so that it matches the ordering of the bead regions in the median columns
 reorder_Count_col <- Count_col[,match(count_int,median_int)]
 # Creating a logical matrix based on whether the bead counts are higher than the QC check provided by the user
-mask <- ifelse(reorder_Count_col[,] > QC_check, TRUE, FALSE)
+mask <- ifelse(reorder_Count_col[,] > QC_min_bead_count, TRUE, FALSE)
 # Extracting the MFI values that have bead counts over the thresholds
 edited_Median_col <- replace(Median_col, !mask, NA)
 # Merging the MFI values that passed QC checks with the Plate # and Well IDs
 QC_exp_data <- cbind(Plate = exp_df$Plate,Well.ID = exp_df$Well.ID,edited_Median_col)
-# Merging the experimental data that passes QC checks with the annotated data
+# Merging the experimental data that passes QC checks with the sample_annotation data
 QC_masked_data <- merge(pre_combined_data,QC_exp_data,by = c("Plate","Well.ID"))
 
 ### Extracting particular measurements of interest
@@ -332,7 +358,7 @@ write.csv(summary_stats_edited,file=paste0(save_path,'summary_stats',exp_name,'.
 if(file.exists(paste0(save_path,'summary_stats',exp_name,'.csv')) &
    file.exists(paste0(save_path,'combined_data_',exp_name,'.csv')) &
    file.exists(paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv')))
-{print('Files were successfully created. Check ',save_path)}
+    {print(paste0('Files were successfully created. Check ',save_path))}
 
 sink(type = "message")
 close(logger)
