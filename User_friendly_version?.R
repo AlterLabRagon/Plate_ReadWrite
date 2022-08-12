@@ -95,16 +95,16 @@ source_url("https://raw.githubusercontent.com/AlterLabRagon/Plate_ReadWrite/main
 source_url("https://raw.githubusercontent.com/AlterLabRagon/Plate_ReadWrite/main/Src/convert_384..R")
 
 ### Create an Error and Warning Log Folder and File
-#dir.create(file.path(save_path,'Log'))
-#log_path <- file.path(save_path,'Log')
+dir.create(file.path(save_path,'Log'))
+log_path <- file.path(save_path,'Log')
 
-#get_log_file_name <- function(file_name="log_file")
-#  {file_name <- paste(file_name,format(Sys.time(), "%Y%m%d"),sep="_")
-#  file_name <- paste(log_path, paste(file_name,"log", sep="."), sep="/")
-#  return(file_name)}
+get_log_file_name <- function(file_name="log_file")
+  {file_name <- paste(file_name,format(Sys.time(), "%Y%m%d"),sep="_")
+  file_name <- paste(log_path, paste(file_name,"log", sep="."), sep="/")
+  return(file_name)}
 
-#logger <- file(get_log_file_name(), open = "a")
-#sink(logger, append = TRUE, type="message")
+logger <- file(get_log_file_name(), open = "a")
+sink(logger, append = TRUE, type="message")
 
 ### Perform Formatting Checks
 ##########################################################################
