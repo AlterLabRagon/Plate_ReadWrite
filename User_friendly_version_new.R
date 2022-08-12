@@ -15,7 +15,7 @@ num_384 <- 4
 num_96 <- 0
 num_well_in_platemap <- 96
 exp_name <- 'Bead_party'
-save_path <- '/Users/maanasa/Desktop/Plate_ReadWrite_new/Plate_ReadWrite/Example_markdown/'
+save_path <- 'Example_markdown/'
 QC_check <- 40
 platemap_long <- FALSE
   
@@ -90,6 +90,9 @@ library(plater)
 library(tibble)
 library(stats)
 
+# 
+if(!dir.exists(save_path))
+  {dir.create(save_path,recursive = 'T')}
 
 source('Src/Format_checks2.R')
 source('Src/convert_384..R')
