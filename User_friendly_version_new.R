@@ -393,3 +393,4 @@ if(corr_plot == TRUE)
   ggsave(curfilname, ml, width = 20, height = 10, dpi = 300, limitsize=FALSE)
   dev.off() }
 
+closeAllConnections()
