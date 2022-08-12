@@ -89,7 +89,7 @@ library(ggplot2)
 library(plater)
 library(tibble)
 library(stats)
-library(devtools)
+
 
 source('Src/Format_checks2.R')
 source('Src/convert_384..R')
