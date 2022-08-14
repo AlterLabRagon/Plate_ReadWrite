@@ -9,67 +9,47 @@ options(warn=1)
 
 ### Required parameters (to change)
 ##########################################################################
-#' @param duplicate_horizontal This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
-#' @param measurements This list contains the measurements of interest from the IQue data (e.g. "Median BL2-H of 1"). It can be empty.
-#' @param num_386 This is a numeric describing the total # of 386 well plates used in the experiment (that show up in the IQUE data file)
-#' @param num_96 This is a numeric describing the total # of 96 well plates used in the experiment (that show up in the IQUE data file)
-#' @param num_well_in_platemap This is a numeric describing the # of wells used in the platemap (options are 96 and 384)
 #' @param exp_name This is a string that describes the name of the experiment
+#' @param num_386 This is a numeric describing the total # of 386 well plates used in the experiment.
+#' @param num_96 This is a numeric describing the total # of 96 well plates used in the experiment.
+#' @param num_well_in_platemap This is a numeric describing the # of wells used in the platemap (options are 96 and 384)
+#' @param duplicate_horizontal This boolean is set to TRUE when duplicates are pipetted horizontally and FALSE when duplicates are pipetted vertically
+#' @param measurements This list contains the measurements of interest from the iQue data that will be extracted in the summary statistics output if specified (e.g. "Median BL2-H of 1"). It can be empty.
 #' @param save_path This is a string that denotes where the final combined data will be saved
-#' @param QC_min_bead_count This is a numeric that is used as the minimum bead count threshold  
-duplicate_horizontal <- TRUE 
-measurements <- NULL
+exp_name <- 'Bead_party'
 num_384 <- 4
 num_96 <- 0
 num_well_in_platemap <- 96
-exp_name <- 'Bead_party'
-save_path <- 'Example_markdown/'
-QC_min_bead_count <- 40
+duplicate_horizontal <- TRUE 
+measurements <- NULL
+save_path <- 'Plate_ReadWrite_Results/'
 
 ### Required files (leave as NUlL to be prompted with a file pop up)
 ##########################################################################
-#' @param sample_annotation_path This string is the path of the .csv file that contains the sample's unique IDs (unique_ID) and meta data. 
+#' @param sample_annotation_path This string is the path of the .csv file that contains the sample's unique IDs (unique_id) and meta data. 
 #' @param platemap_path This string is the path of the .csv file that contains the plate map. See plater format requirements (e.g. rows are labeled A:H, columns are labeled 1:12, and there is one empty row between wells)
 #' @param plate_annotation_path This string is the path of the .csv file that contains the beadmap, describing the mapping between the experimental plates, platemap, beadtype, and secondaries used
-#' @param IQue_path This string is the path of the .csv file contains the IQUE data in long format (not plate format) 
+#' @param IQue_path This string is the path of the .csv file contains the iQUE data in long format (not plate format) 
+#' @param skip_sample_annotation This boolean describes whether you have sample annotation data. It is set to TRUE when you don't have sample annotation data.
+#' @param skip_plate_annotation This boolean describes whether you have plate annotation data or not. It is set to TRUE when you don't have plate annotation data.
 sample_annotation_path <- 'Example/Data/sample_annotation_data.csv'
 platemap_path <- 'Example/Data/platemap_small.csv'
 plate_annotation_path <- 'Example/Data/beadmap_small.csv'
 IQue_path <- 'Example/Data/ique_data.csv'
-
-## Skips the input files
-skip_annotation <- 
-skip_plate_annotation <- 
-  
-plate_annotation_file <- FALSE  
-if(plate_annotation_file == TRUE)
-  {secondary_name <- NULL
-  num_platemap <- NULL
-  rep_or_not <- ifelse(num_384 !=0 & num_well_in_platemap == 96,TRUE,FALSE)
-  num_actual_plates <- ifelse(num_384 != 0,num_384,num_96)
-  plate_rep <- ifelse(rep_or_not,num_actual_plates*2,num_actual_plates)
-  bm_plate_list <- rep(c(1:num_actual_plates),plate_rep)
-  bm_platemap_list <- rep(c(1:num_platemap),plate_rep)
-  bm_beadtype_list <- rep(1,plate_rep)
-  bm_secondary_list <-  rep(secondary_name,plate_rep)}
-
-
-  
+skip_sample_annotation <- FALSE
+skip_plate_annotation <- FALSE
 
 ### Optional parameters (to change)
+# Change if you are skipping sample or plate annotation data, want to specify the minimum bead count, or plot correlations
 ##########################################################################
 #' @param QC_min_bead_count This is a numeric that is used as the minimum bead count threshold  
-#' @param corr_plot This is a boolean that is set to TRUE when you want to plot correlation for duplicates for each plate and unique_id 
-#' @param platemap_long_format This is a boolean that is set to TRUE when your platemap is already in long format with Well IDs (A01) mapped to the samples
-#' @param num_platemap This is the number of plates in the platemap
+#' @param plot_corr This is a boolean that is set to TRUE when you want to plot correlation for duplicates for each plate and unique_id 
+#' @param secondary_name This is the secondary name. Fill this out if you skip sample annotation data. If set to null, it defaults to 1
+#' @param num_platemap This is a numeric describing the number of plates in the platemap file. Fill this out if you skip sample annotation data.
 QC_min_bead_count <- NULL
-plate_names <- NULL
-corr_plot <- NULL
-platemap_long_format <- NULL
+plot_corr <- NULL
+secondary_name <- NULL
 num_platemap <- NULL
-
-### Beadmap Generator
-#####################
 
 #####################
 
@@ -94,9 +74,6 @@ num_platemap <- NULL
 ### CODE TO RUN
 ##########################################################################
 
-### Information about parameters
-##########################################################################
-
 # Prompting a file pop up to get the sample_annotation, platemap, plate_annotation, and IQue data
 if(is.null(sample_annotation_path))
   {sample_annotation_path = rstudioapi::selectFile(caption = "Select sample_annotation Data File",label = "Select sample_annotation Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
@@ -107,18 +84,16 @@ if(is.null(plate_annotation_path))
 if(is.null(IQue_path))
   {IQue_path <- rstudioapi::selectFile(caption = "Select iQue Data File",label = "Select iQue Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
 # If no plate names are provided, integer names will be assigned to the plates
+plate_names <- NULL
 if(is.null(plate_names))
   {actual_num_plate <- ifelse(num_96 == 0, num_384, num_96)
   plate_names <- c(1:actual_num_plate)}
 # If no QC check is provided, a minimum bead count threshold of 20 is set
 if(is.null(QC_min_bead_count))
-  {QC_min_bead_count <- 20}
+  {QC_min_bead_count <- 40}
 # If no option is provided for plotting correlation plot, it is set to FALSE
-if(is.null(corr_plot))
-  {corr_plot <- FALSE}
-# If no user input is provided for whether the platemap is in long format or not, we assume that it is not in long format
-if(is.null(platemap_long_format))
-  {platemap_long_format <- FALSE}
+if(is.null(plot_corr))
+  {plot_corr <- FALSE}
 
 ### Libraries
 ##########################################################################
@@ -158,7 +133,22 @@ check_data_key(plate_annotation_path)
 
 ### Get Beadmap Data
 ##########################################################################
-beadmap_data <- read_csv(plate_annotation_path)
+if(skip_plate_annotation)
+  {secondary_name <- ifelse(is.null(secondary),1,secondary)
+  rep_or_not <- ifelse(num_384 !=0 & num_well_in_platemap == 96,TRUE,FALSE)
+  num_actual_plates <- ifelse(num_384 != 0,num_384,num_96)
+  plate_rep <- ifelse(rep_or_not,2,1)
+  bm_plate_list <- rep(c(1:num_actual_plates),each = plate_rep, length.out = num_actual_plates*plate_rep)
+  bm_platemap_list <- rep(c(1:num_platemap),length.out = num_actual_plates*plate_rep)
+  bm_beadtype_list <- rep(1,length.out = num_actual_plates*plate_rep)
+  bm_secondary_list <-  rep(secondary_name,length.out = num_actual_plates*plate_rep)
+  beadmap_data <- data.frame('plate' = bm_plate_list, 'platemap' = bm_platemap_list, 'set' = bm_beadtype_list, 'secondary' = bm_secondary_list)
+}else{
+  beadmap_data <- read_csv(plate_annotation_path)
+}
+
+head(beadmap_data,10)
+
 colnames(beadmap_data) <- tolower(colnames(beadmap_data))
 platemap_col <- grep('platemap',colnames(beadmap_data))
 num_exp <- length(unique(beadmap_data$plate))
@@ -185,7 +175,12 @@ if (num_well_in_platemap == 384 & num_exp != num_platemap | num_well_in_platemap
 
 ### Get sample_annotation Meta Data
 ##########################################################################
-sample_meta_data <- read_csv(sample_annotation_path) 
+if(skip_sample_annotation == TRUE)
+  {sample_meta_data <- data.frame(unique_id = c(1:100),fake_1 = rep(LETTERS[1:25],4),fake_2 = rep(c('A','B'),50))}
+
+if(skip_sample_annotation == FALSE)
+  {sample_meta_data <- read_csv(sample_annotation_path)}
+
 colnames(sample_meta_data) <- tolower(colnames(sample_meta_data))
 anno_col <- ncol(sample_meta_data) - 1
 sample_meta_data$unique_id <- as.character(sample_meta_data$unique_id)
