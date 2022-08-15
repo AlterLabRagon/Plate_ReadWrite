@@ -2,7 +2,7 @@ To use Plate_ReadWrite you can download the User_friendly_version_new.R script. 
 
 # Plate_ReadWrite
 Objective: Format iQue flow cytometer data using platemap and annotated meta data
-![image](https://user-images.githubusercontent.com/100164917/184568156-caa248a3-5f60-43e8-9291-43a33bcef967.png)
+![image](https://user-images.githubusercontent.com/100164917/184569650-008c0662-001a-4d41-9895-7be0b5fe0555.png)
 
 Inputs
 - Platemap, which has spatially mapped out unique identifiers or index values
