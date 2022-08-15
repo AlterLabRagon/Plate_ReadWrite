@@ -1,21 +1,21 @@
-To use Plate_ReadWrite you can download the User_friendly_version.R script. You can find example data and an annotated R Markdown Guide in the examples section. 
+To use Plate_ReadWrite you can download the User_friendly_version_new.R script. You can find example data and an annotated R Markdown Guide in the examples section. 
 
 # Plate_ReadWrite
 Objective: Format iQue flow cytometer data using platemap and annotated meta data
 
 Inputs
 - Platemap, which has spatially mapped out unique identifiers or index values
-- Annotated Metadata, which contains additional info about each sample that is organized by its unique identifier or index #
+- Sample annotation data, which contains additional info about each sample that is organized by its unique identifier or index #
 - IQue Experimental Data, which is in the long format
-- Data key, which describes the secondaries, beadsets, and sample arrangements used in each experimental plate
+- Plate annotation data, which describes the secondaries, beadsets, and sample arrangements used in each experimental plate
 - Other Parameters
 ![image](https://user-images.githubusercontent.com/100164917/182453547-f8e065ae-369a-4f2f-b3a1-6ccc9869a053.png)
 
 Formatting Requirements
 - Platemap - one empty row between plates, rows must be labeled A:H or A:P, and columns must be labeled 1:12 or 1:24
-- Annotated Metadata - must contain a unique_id column (case does not matter) and there must be no duplicates in the unique_id column
+- Sample annotation - must contain a unique_id column (case does not matter) and there must be no duplicates in the unique_id column
 - IQue data - must be in long format and contain a Well.ID column
-- data key - must contain plate, set, platemap, secondary, region, and antigen columns (case does not matter)
+- Plate annotation - must contain plate, set, platemap, secondary, region, and antigen columns (case does not matter)
   - plate column (experimental plate #)
   - set (type of bead used)
   - platemap (plate # that matches the platemap used)
