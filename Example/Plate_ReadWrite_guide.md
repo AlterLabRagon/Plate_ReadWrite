@@ -1,43 +1,63 @@
----
-title: "Guide to Using Plate_ReadWrite to Format IQue Data"
-date: "08/14/2022"
-output: rmarkdown::github_document
----
+Guide to Using Plate\_ReadWrite to Format IQue Data
+================
+08/14/2022
 
 ### Before Getting Started
 
 #### Install Packages
-Before getting started with Plate_ReadWrite, make sure you have installed the following packages. You can install them using the following command: ``` install.packages(c("readr","tidyr","dplyr","ggplot2","plater","tibble","stats","devtools"))```. You only need to do this step once. To access the packages later, you will store them in your library.
+
+Before getting started with Plate\_ReadWrite, make sure you have
+installed the following packages. You can install them using the
+following command:
+`install.packages(c("readr","tidyr","dplyr","ggplot2","plater","tibble","stats","devtools"))`.
+You only need to do this step once. To access the packages later, you
+will store them in your library.
 
 #### Gather and Format Your Input Data
-To run plate_readwrite, you will need a platemap, iQue data, sample annotation, and plate annotation. You can skip providing sample and plate annotation data files.
 
-1. The **platemap** has spatially mapped out unique identifiers or index values
-    - Rows are labeled A - H or A - P depending on whether it is a 96 or 384 Well Plate
-    - Columns are labeled 1 - 12 or 1 - 24
-    - There is a space between each row
-    - You can find a template of the platemap [here](https://github.com/AlterLabRagon/Plate_ReadWrite/tree/main/Example/Template) 
+To run plate\_readwrite, you will need a platemap, iQue data, sample
+annotation, and plate annotation. You can skip providing sample and
+plate annotation data files.
 
+1.  The **platemap** has spatially mapped out unique identifiers or
+    index values
+      - Rows are labeled A - H or A - P depending on whether it is a 96
+        or 384 Well Plate
+      - Columns are labeled 1 - 12 or 1 - 24
+      - There is a space between each row
+      - You can find a template of the platemap
+        [here](https://github.com/AlterLabRagon/Plate_ReadWrite/tree/main/Example/Template)
+2.  The **sample annotation data** contains additional information about
+    each sample that is organized by its unique identifier or index \#
+      - The annotated column needs to contain an **unique\_id** column
+3.  The **iQue Experimental Data**, which is in long format (not plate
+    format)
+      - The iQue data has a row starting with “Plate:” separating data
+        from each plate
+4.  The **plate annotation data** describes the secondaries, beadsets,
+    and sample arrangements used in each experimental plate. You can see
+    an example
+    [here](https://github.com/AlterLabRagon/Plate_ReadWrite/tree/main/Example/Template).
+      - The plate annotation data file needs to have **plate**,
+        **platemap**, **set**, and **secondary** columns that account
+        for each experimental plate run.
 
-2. The **sample annotation data** contains additional information about each sample that is organized by its unique identifier or index #
-    - The annotated column needs to contain an **unique_id** column
-
-
-3. The **iQue Experimental Data**, which is in long format (not plate format)
-    - The iQue data has a row starting with "Plate: " separating data from each plate
-  
-  
-4. The **plate annotation data** describes the secondaries, beadsets, and sample arrangements used in each experimental plate. You can see an example [here](https://github.com/AlterLabRagon/Plate_ReadWrite/tree/main/Example/Template).
-    - The plate annotation data file needs to have **plate**, **platemap**, **set**, and **secondary** columns that account for each experimental plate run.
- 
- 
 #### Download the code
-1. You can either (1) download the entire folder from the [GitHub](https://github.com/AlterLabRagon/Plate_ReadWrite) by clicking on the green code button and selecting download zip or (2) copying and pasting the main script found [here](https://github.com/AlterLabRagon/Plate_ReadWrite/blob/main/User_friendly_version.R) into a new R script. If you choose to download the entire folder, you can double click on the User_friendly_version_new.R script to change the working directory to that folder. 
 
+1.  You can either (1) download the entire folder from the
+    [GitHub](https://github.com/AlterLabRagon/Plate_ReadWrite) by
+    clicking on the green code button and selecting download zip or (2)
+    copying and pasting the main script found
+    [here](https://github.com/AlterLabRagon/Plate_ReadWrite/blob/main/User_friendly_version.R)
+    into a new R script. If you choose to download the entire folder,
+    you can double click on the User\_friendly\_version\_new.R script to
+    change the working directory to that folder.
 
 ### Inputs
+
 First, we specify required inputs.
-```{r}
+
+``` r
 exp_name <- 'Bead_party'
 num_384 <- 4
 num_96 <- 0
@@ -46,8 +66,11 @@ duplicate_horizontal <- TRUE
 measurements <- NULL
 save_path <- '/Users/maanasa/Desktop/Plate_ReadWrite/Example/Plate_ReadWrite_Results/'
 ```
-We can either specify the file path or leave it as null to be prompted with a pop up window.
-```{r}
+
+We can either specify the file path or leave it as null to be prompted
+with a pop up window.
+
+``` r
 sample_annotation_path <- '/Users/maanasa/Desktop/Plate_ReadWrite/Example/Data/sample_annotation_data.csv'
 platemap_path <- '/Users/maanasa/Desktop/Plate_ReadWrite/Example/Data/platemap_small.csv'
 plate_annotation_path <- '/Users/maanasa/Desktop/Plate_ReadWrite/Example/Data/plate_annotation_small.csv'
@@ -55,15 +78,23 @@ IQue_path <- '/Users/maanasa/Desktop/Plate_ReadWrite/Example/Data/ique_data.csv'
 skip_sample_annotation <- FALSE
 skip_plate_annotation <- FALSE
 ```
-Here are optional parameters you can set. If you choose to skip providing a plate annotation file, you must enter the name of the secondary used and the number of plate maps found in the platemap file. You can also change the minimum bead count or plot correlations here.
-```{r}
+
+Here are optional parameters you can set. If you choose to skip
+providing a plate annotation file, you must enter the name of the
+secondary used and the number of plate maps found in the platemap file.
+You can also change the minimum bead count or plot correlations here.
+
+``` r
 QC_min_bead_count <- NULL
 plot_corr <- NULL
 secondary_name <- NULL
 num_platemap <- NULL
 ```
-This code chunk prompts you with a pop up window if the file paths were set to be NULL.
-```{r}
+
+This code chunk prompts you with a pop up window if the file paths were
+set to be NULL.
+
+``` r
 if(is.null(sample_annotation_path))
   {sample_annotation_path = rstudioapi::selectFile(caption = "Select Sample Annotation Data File",label = "Select Sample Annotation Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
 if(is.null(platemap_path))
@@ -73,8 +104,12 @@ if(is.null(plate_annotation_path))
 if(is.null(IQue_path))
   {IQue_path <- rstudioapi::selectFile(caption = "Select iQue Data File",label = "Select iQue Data File",filter = "CSV Files (*.csv)",existing = TRUE)}
 ```
-This code assigns values to the optional parameters if they were set to be null. By default, the minimum bead threshold is set to 40 and no correlation plots are produced.
-```{r}
+
+This code assigns values to the optional parameters if they were set to
+be null. By default, the minimum bead threshold is set to 40 and no
+correlation plots are produced.
+
+``` r
 # If no plate names are provided, integer names will be assigned to the plates
 plate_names <- NULL
 if(is.null(plate_names))
@@ -87,12 +122,32 @@ if(is.null(QC_min_bead_count))
 if(is.null(plot_corr))
   {plot_corr <- FALSE}
 ```
+
 ### Code to Run
-This code adds the packages to the library, a specific directory where packages are stored. We also download source code files from GitHub. We also create a directory where resulting files are stored if the save_path is not found.
-```{r}
+
+This code adds the packages to the library, a specific directory where
+packages are stored. We also download source code files from GitHub. We
+also create a directory where resulting files are stored if the
+save\_path is not found.
+
+``` r
 library(readr)
 library(tidyr)
 library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 library(ggplot2)
 library(plater)
 library(tibble)
@@ -105,9 +160,19 @@ source('/Users/maanasa/Desktop/Plate_ReadWrite/Src/convert_384..R')
 if(!dir.exists(save_path))
   {dir.create(save_path,recursive = 'T')}
 ```
-Here we create a logger file that stores messages and warnings received while running the project. Make sure you check the logger file for any warnings!
-```{r}
+
+Here we create a logger file that stores messages and warnings received
+while running the project. Make sure you check the logger file for any
+warnings\!
+
+``` r
 dir.create(file.path(save_path,'Log'))
+```
+
+    ## Warning in dir.create(file.path(save_path, "Log")): '/Users/maanasa/Desktop/
+    ## Plate_ReadWrite/Example/Plate_ReadWrite_Results//Log' already exists
+
+``` r
 log_path <- file.path(save_path,'Log')
 get_log_file_name <- function(file_name="log_file")
   {file_name <- paste(file_name,format(Sys.time(), "%X%Y%m%d"),sep="_")
@@ -116,15 +181,64 @@ get_log_file_name <- function(file_name="log_file")
 logger <- file(get_log_file_name(), open = "a")
 sink(logger, append = TRUE, type="message")
 ```
-We perform formatting checks to ensure that the files are compatible with the program requirements. If they are not compatible, you can fix the files as described by the warnings and change the file paths and rerun the code.
-```{r}
+
+We perform formatting checks to ensure that the files are compatible
+with the program requirements. If they are not compatible, you can fix
+the files as described by the warnings and change the file paths and
+rerun the code.
+
+``` r
 check_sample_annotation_data(sample_annotation_path)
+```
+
+    ## * Checking sample annotation data file path ... good!
+    ## * Checking that sample annotation data is a csv file ... good!
+    ## * Checking that file is not empty ... good!
+    ## * Checking valid sample annotation data column labels ... good!
+    ## * Checking whether there are duplicate IDs in the unique_id column ... good!
+    ## Success!
+
+``` r
 check_exp_data(IQue_path,measurements,num_384,num_96)
+```
+
+    ## * Checking experimental data file path ... good!
+    ## * Checking that experimental data file is a csv ... good!
+    ## * Checking that experimental data file is not empty ... good!
+    ## * Checking that experimental data is in long format using the 'Well.ID' column and that the number of user entered 384 and 96 well plates matches the # of plates identified in the experimental data ...
+
+    ## Warning in readLines(file): incomplete final line found on '/Users/maanasa/
+    ## Desktop/Plate_ReadWrite/Example/Data/ique_data.csv'
+
+    ## good!
+    ## * Checking that measurements are included in the experimental data ... good!
+    ## Success!
+
+``` r
 check_plater_format(platemap_path)
+```
+
+    ## * Checking file path ... good!
+    ## * Checking that file is not empty ... good!
+    ## * Checking valid column labels ... good!
+    ## * Checking file length and number of plate layouts ... good!
+    ## * Checking plate dimensions and row labels ... good!
+    ## Success!
+
+``` r
 check_plate_annotation(plate_annotation_path)
 ```
-If a plate annotation data file is not provided, we create data to match the experimental data provided.
-```{r}
+
+    ## * Checking plate annotation file path ... good!
+    ## * Checking that plate annotation file is a csv ... good!
+    ## * Checking that plate annotation file is not empty ... good!
+    ## * Checking plate annotation has valid column labels ... good!
+    ## Success!
+
+If a plate annotation data file is not provided, we create data to match
+the experimental data provided.
+
+``` r
 if(skip_plate_annotation)
   {secondary_name <- ifelse(is.null(secondary),1,secondary)
   rep_or_not <- ifelse(num_384 !=0 & num_well_in_platemap == 96,TRUE,FALSE)
@@ -138,10 +252,38 @@ if(skip_plate_annotation)
 }else{
   beadmap_data <- read_csv(plate_annotation_path)
 }
+```
+
+    ## Rows: 8 Columns: 4
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): secondary
+    ## dbl (3): plate, platemap, set
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
 head(beadmap_data,10)
 ```
-We read in the plate annotation data data to identify the number of experimental plates, the number of platemap plates, beadtypes, and secondaries. 
-```{r}
+
+    ## # A tibble: 8 × 4
+    ##   plate platemap   set secondary
+    ##   <dbl>    <dbl> <dbl> <chr>    
+    ## 1     1        1     1 IgM      
+    ## 2     1        2     1 IgM      
+    ## 3     2        1     1 IgA      
+    ## 4     2        2     1 IgA      
+    ## 5     3        1     2 IgM      
+    ## 6     3        2     2 IgM      
+    ## 7     4        1     2 IgA      
+    ## 8     4        2     2 IgA
+
+We read in the plate annotation data data to identify the number of
+experimental plates, the number of platemap plates, beadtypes, and
+secondaries.
+
+``` r
 colnames(beadmap_data) <- tolower(colnames(beadmap_data))
 platemap_col <- grep('platemap',colnames(beadmap_data))
 num_exp <- length(unique(beadmap_data$plate))
@@ -149,16 +291,22 @@ num_platemap <- length(unique(beadmap_data$platemap))
 num_beadtype <- length(unique(beadmap_data$set))
 num_secondary <- length(unique(beadmap_data$secondary))
 ```
-We double check that the platemap has either 96 or 384 wells and that the number of experimental data files only consist of 384 or 96-well plate data exclusively.
-```{r}
+
+We double check that the platemap has either 96 or 384 wells and that
+the number of experimental data files only consist of 384 or 96-well
+plate data exclusively.
+
+``` r
 if (!num_well_in_platemap %in% c(96, 384))
   {stop('The number of wells in the platemap must be 96 or 384')}
 if (num_96 !=0 & num_384 !=0)
   {stop('You can only have 96 or 384 well plates in the data not both!')}
 ```
 
-We check to make sure that the plate annotation data specifies all plates of interest.
-```{r}
+We check to make sure that the plate annotation data specifies all
+plates of interest.
+
+``` r
 if (num_well_in_platemap == 384 & num_exp != num_platemap | num_well_in_platemap == 96 & num_exp != num_platemap*2 |num_well_in_platemap == 96 & num_exp != num_platemap)
   {check_mapping <- (num_exp == num_platemap * num_beadtype * num_secondary)
   check_mapping_w_d <- (num_exp == (num_platemap * num_beadtype * num_secondary) / 2)
@@ -169,23 +317,49 @@ if (num_well_in_platemap == 384 & num_exp != num_platemap | num_well_in_platemap
     else
       {stop(paste0('The number of platemaps provided does not match number of experimental plates, considering the different bead sets and secondaries used.','\n Number of beadtypes: ',num_beadtype,'\n Number of secondaries: ',num_secondary,'\n Number of plates in the platemap: ',num_platemap,'\n Number of plates used experimentally: ',num_exp))}}
 ```
-Sample annotation data is read. If the skip sample annotation data parameter is set to TRUE, fake annotation data is created.
-```{r}
+
+Sample annotation data is read. If the skip sample annotation data
+parameter is set to TRUE, fake annotation data is created.
+
+``` r
 if(skip_sample_annotation == TRUE)
   {sample_meta_data <- data.frame(unique_id = c(1:50),fake_1 = rep(LETTERS[1:25],2),fake_2 = rep(c('A','B'),25))}
 if(skip_sample_annotation == FALSE)
   {sample_meta_data <- read_csv(sample_annotation_path)}
+```
 
+    ## Rows: 96 Columns: 3
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): unique_id, Status
+    ## dbl (1): Age
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
 colnames(sample_meta_data) <- tolower(colnames(sample_meta_data))
 anno_col <- ncol(sample_meta_data) - 1
 sample_meta_data$unique_id <- as.character(sample_meta_data$unique_id)
 ```
-We read in the experimental data by finding the location of each row that starts with ‘Plate:’. The number of plates the user is interested in can be smaller or the same size as the number of plates found in the experimental data. We later combine data from the multiple plates and add in the plate names and numbers.
-```{r}
+
+We read in the experimental data by finding the location of each row
+that starts with ‘Plate:’. The number of plates the user is interested
+in can be smaller or the same size as the number of plates found in the
+experimental data. We later combine data from the multiple plates and
+add in the plate names and numbers.
+
+``` r
 # Setting the pattern that comes before the start of a new plate
 plate.indic <- "Plate: "
 # Read in the raw file
 lines <- readLines(IQue_path)
+```
+
+    ## Warning in readLines(IQue_path): incomplete final line found on '/Users/maanasa/
+    ## Desktop/Plate_ReadWrite/Example/Data/ique_data.csv'
+
+``` r
 # Find the start of the new plates using the plate.indic pattern
 plate.start <- grep(plate.indic, lines)
 # Get plate names that are listed in the experimental data file (1 plate name per row)
@@ -229,8 +403,15 @@ Plate_names <- unlist(plate_names_list)
 exp_df <- exp_df %>% add_column(Plate,.after = 1)
 exp_df <- exp_df %>% add_column(Plate_names,.after = 2)
 ```
-We next read in the plate map data. If the number of plate maps provided does not match the number of experimental data, we have to expand the # of plate maps to match the data. We create a new unique id, taking secondaries and beadsets into account. If the user does not have duplicates in their plate map already, we create duplicates and arrange them horizontally or vertically.
-```{r}
+
+We next read in the plate map data. If the number of plate maps provided
+does not match the number of experimental data, we have to expand the \#
+of plate maps to match the data. We create a new unique id, taking
+secondaries and beadsets into account. If the user does not have
+duplicates in their plate map already, we create duplicates and arrange
+them horizontally or vertically.
+
+``` r
 plate_data <- plater::read_plate(file = platemap_path,sep = ',')
 num_plates <- ncol(plate_data) - 1
 num_wells <- nrow(plate_data) 
@@ -272,14 +453,28 @@ if (num_well_in_platemap == 96 & num_384 != 0)
   new_plate_ID_list <- do.call(rbind,plate_ID_list)
   colnames(new_plate_ID_list) <- c("Plate","Well.ID","unique_id_edit")
 }
+```
 
+    ## [1] "Plate 1 192"
+    ## [1] "Plate 2 192"
+    ## [1] "Plate 1 192"
+    ## [1] "Plate 2 192"
+    ## [1] "Plate 1 192"
+    ## [1] "Plate 2 192"
+    ## [1] "Plate 1 192"
+    ## [1] "Plate 2 192"
+
+``` r
 # Convert plate data into a tidyr format if there are 384 wells in the platemap
 if (num_well_in_platemap == 384)
   {colnames(plate_data) <- c('Well.ID',(1:ncol(plate_data)))
   plate_data_tidy <- plate_data %>% pivot_longer(names_to = "Plate",values_to = "unique_id_edit",cols = -Well.ID)}
 ```
-We merge the plate data with the plate annotation and experimental data by using the unique_id, Plate, and Well.ID columns.
-```{r}
+
+We merge the plate data with the plate annotation and experimental data
+by using the unique\_id, Plate, and Well.ID columns.
+
+``` r
 if (num_well_in_platemap == 384 | num_well_in_platemap == 96 & num_96 != 0) 
   { # Split the unique_id_edit to get the unique_id, beadset, and secondary
   plate_data_tidier <- data.frame(do.call('rbind', strsplit(as.character(plate_data_tidy$unique_id_edit), '.', fixed=TRUE)))
@@ -302,8 +497,13 @@ if (num_well_in_platemap == 96 & num_384 !=0)
   pre_combined_data <- left_join(plate_data_tidyr,sample_meta_data,by = "unique_id")
   combined_data <- merge(pre_combined_data,exp_df,by = c("Plate","Well.ID")) }
 ```
-We get data that passes the QC checks by mapping the bead count columns to the median columns and applying the QC check threshold that was previously defined. IF the corresponding bead count column is below the QC threshold, we mask or make the MFI column be a NA.
-```{r}
+
+We get data that passes the QC checks by mapping the bead count columns
+to the median columns and applying the QC check threshold that was
+previously defined. IF the corresponding bead count column is below the
+QC threshold, we mask or make the MFI column be a NA.
+
+``` r
 # Getting the count and median columns separately
 Count_col <- exp_df[,which(grepl("Count",colnames(exp_df)))]
 Median_col <- exp_df[,which(grepl("Median",colnames(exp_df)))]
@@ -321,31 +521,63 @@ QC_exp_data <- cbind(Plate = exp_df$Plate,Well.ID = exp_df$Well.ID,edited_Median
 # Merging the experimental data that passes QC checks with the annotated data
 QC_masked_data <- merge(pre_combined_data,QC_exp_data,by = c("Plate","Well.ID"))
 ```
-We can extract particular measurements of interest if specified in the beginning.
-```{r}
+
+We can extract particular measurements of interest if specified in the
+beginning.
+
+``` r
 if (length(measurements) != 0)
   {combined_data_abbr <- select(combined_data,"unique_id","Plate","Well.ID",measurements)
   write.csv(combined_data_abbr, file=paste0(save_path,'combined_data_abbr_',exp_name,'.csv'))}
 ```
-We can calculate summary statistics like the mean, median, and standard deviation for each sample (2 duplicates).
-```{r}
+
+We can calculate summary statistics like the mean, median, and standard
+deviation for each sample (2 duplicates).
+
+``` r
 summary_stats <- QC_masked_data %>% group_by(unique_id,Plate) %>% summarise(across(c((anno_col + 5):(ncol(QC_masked_data) -2)),list(mean = mean, median = median, sd = sd)))
+```
+
+    ## `summarise()` has grouped output by 'unique_id'. You can override using the
+    ## `.groups` argument.
+
+``` r
 summary_stats_edited <- merge(plate_data_tidyr,summary_stats,by = c('unique_id','Plate'))
 summary_stats_editfed <- summary_stats_edited %>% dplyr::arrange(Plate) %>% dplyr::arrange(Well.ID)
 summary_stats_edited <- summary_stats_edited %>% dplyr::select(-unique_id_edit)
 ```
-We can check whether any data was lost or accidentally added while merging.
-```{r}
+
+We can check whether any data was lost or accidentally added while
+merging.
+
+``` r
 check_dim_combined(plate_data_tidyr,pre_combined_data,combined_data,save_path,sample_meta_data,exp_df,anno_col,QC_exp_data,QC_masked_data,summary_stats,summary_stats_edited)
 ```
-We finally save the combined, QC masked, and summary statistics edited data files.
-```{r}
+
+    ## * Checking whether the correct columns were merged to create the combined data ... good!
+    ## * Checking whether the dimensions of the annotated data changed ... good!
+    ## * Checking whether the dimensions of the experimental data changed ... good!
+    ## * Checking whether any rows of experimental data were dropped ... good!
+    ## * Checking whether any rows of data were added while merging annotated data ... good!
+    ## * Checking whether the correct columns were merged to create the QC masked data ... good!
+    ## * Checking whether any rows of QC experimental data were dropped ... good!
+    ## * Checking whether the correct columns were merged to create the summary statistics data ... good!
+    ## * Checking whether any rows of summary statistics data were dropped ... good!
+    ## Success!
+
+We finally save the combined, QC masked, and summary statistics edited
+data files.
+
+``` r
 write.csv(combined_data, file=paste0(save_path,'combined_data_',exp_name,'.csv'))
 write.csv(QC_masked_data, file=paste0(save_path,'QC_masked_combined_data_',exp_name,'.csv'))
 write.csv(summary_stats_edited,file=paste0(save_path,'summary_stats',exp_name,'.csv'))
 ```
-We can also correlation plots between duplicates for each sample if corr_plot is set to be TRUE.
-```{r}
+
+We can also correlation plots between duplicates for each sample if
+corr\_plot is set to be TRUE.
+
+``` r
 if(plot_corr) 
  {library(gridExtra)
   QC_exp_data_with_ids <- merge(plate_data_tidyr,QC_exp_data,by = c("Plate","Well.ID"))
@@ -386,14 +618,20 @@ if(plot_corr)
   ggsave(curfilname, ml, width = 20, height = 10, dpi = 300, limitsize=FALSE)
   dev.off() }
 ```
+
 We finally close the link to the logger file.
-```{r}
+
+``` r
 sink(type = "message")
 close(logger)
 #closeAllConnections()
 ```
+
 ### Some Tips for Debugging
-1) Use ```View()``` and ```str()``` to examine the structure of the data
-2) Re-run individual lines of code to figure out where the error is occurring 
-3) Use dim() to track dimensions if there seems to be an issue with dimensionality
-4) Search Google 
+
+1)  Use `View()` and `str()` to examine the structure of the data
+2)  Re-run individual lines of code to figure out where the error is
+    occurring
+3)  Use dim() to track dimensions if there seems to be an issue with
+    dimensionality
+4)  Search Google
