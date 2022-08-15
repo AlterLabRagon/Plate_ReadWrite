@@ -1,0 +1,58 @@
+Error: Sorry, can't find your file 'Example/Data/beadmap_small.csv'.
+Error: Sorry, can't find your file 'Example/Data/beadmap_small.csv'.
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+* Checking whether the correct columns were merged to create the combined data ... good!
+* Checking whether the dimensions of the annotated data changed ... good!
+* Checking whether the dimensions of the experimental data changed ... good!
+* Checking whether any rows of experimental data were dropped ... good!
+* Checking whether any rows of data were added while merging annotated data ... good!
+* Checking whether the correct columns were merged to create the QC masked data ... problem.
+Error in check_merge_columns_QC(pre_combined, QC_exp_data) : 
+  could not find function "check_merge_columns_QC"
+* Checking whether the correct columns were merged to create the combined data ... good!
+* Checking whether the dimensions of the annotated data changed ... good!
+* Checking whether the dimensions of the experimental data changed ... good!
+* Checking whether any rows of experimental data were dropped ... good!
+* Checking whether any rows of data were added while merging annotated data ... good!
+* Checking whether the correct columns were merged to create the QC masked data ... problem.
+Error in check_merge_columns_QC(pre_combined, QC_exp_data) : 
+  could not find function "check_merge_columns_QC"
+Error in check_merge_columns_QC(pre_combined, QC_exp_data) : 
+  could not find function "check_merge_columns_QC"
+Error in check_merge_columns_QC(pre_combined, QC_exp_data) : 
+  could not find function "check_merge_columns_QC"
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined_demo(plate_data_tidyr, pre_combined_data,  : 
+  could not find function "check_dim_combined_demo"
+Error in check_dim_combined_demo(plate_data_tidyr, pre_combined_data,  : 
+  could not find function "check_dim_combined_demo"
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error in check_dim_combined(plate_data_tidyr, pre_combined_data, combined_data,  : 
+  unused arguments (QC_exp_data, QC_masked_data, summary_stats, summary_stats_edited)
+Error: object 'corr_plot' not found
+Error: object 'corr_plot' not found
+Quitting from lines 243-289 (Plate_ReadWrite_guide.Rmd) 
+Error in convert_to(plate_data_tidy, i, plate_names[i], (i * 2 - 1), i *  : 
+  object 'duplicate_dir' not found
+Calls: <Anonymous> ... eval_with_user_handlers -> eval -> eval -> convert_to -> matrix
+Execution halted
+Quitting from lines 316-332 (Plate_ReadWrite_guide.Rmd) 
+Error in ifelse(reorder_Count_col[, ] > QC_check, TRUE, FALSE) : 
+  object 'QC_check' not found
+Calls: <Anonymous> ... withVisible -> eval_with_user_handlers -> eval -> eval -> ifelse
+Execution halted

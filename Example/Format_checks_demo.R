@@ -226,7 +226,7 @@ check_dropped_rows_ss <- function(pre_combined,summary_stats_edited,dropped_ids,
 
 ### Checking formatting of output merged files
 ################################################################################
-check_dim_combined <- function(plate_data_tidyr,pre_combined,combined,save_path,meta_data,exp_df,anno_col,QC_exp_data,QC_masked_data,summary_stats,summary_stats_edited) {
+check_dim_combined_demo <- function(plate_data_tidyr,pre_combined,combined,save_path,meta_data,exp_df,anno_col,QC_exp_data,QC_masked_data,summary_stats,summary_stats_edited) {
   check <- function(description, f) {
     message(paste0("* ", description, " ... ", collapse = ""), appendLF = FALSE)
     result <- tryCatch(

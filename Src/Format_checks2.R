@@ -38,7 +38,7 @@ check_duplicated_unique <- function(file) {
 
 ### Check annotated data
 ################################################################################
-check_annotated_data <- function(file) {
+check_sample_annotation_data <- function(file) {
   check <- function(description, f) {
     message(paste0("* ", description, " ... ", collapse = ""), appendLF = FALSE)
     result <- tryCatch(
@@ -52,11 +52,11 @@ check_annotated_data <- function(file) {
     result
   }
   
-  check("Checking annotated meta data file path", function() check_file_path(file))
-  check("Checking that annotated meta data is a csv file", function() check_csv(file))
+  check("Checking sample annotation data file path", function() check_file_path(file))
+  check("Checking that sample annotation data is a csv file", function() check_csv(file))
   check("Checking that file is not empty", function() check_that_file_is_non_empty(file))
   
-  check("Checking valid annotated meta data column labels", function() check_column_name(file,'Annotated Data','unique_id'))
+  check("Checking valid sample annotation data column labels", function() check_column_name(file,'Annotated Data','unique_id'))
   
   check("Checking whether there are duplicate IDs in the unique_id column",function() check_duplicated_unique(file))
   
@@ -114,7 +114,7 @@ check_exp_data <- function(file,measurements,num_384,num_96) {
 
 ### Check formatting of data key file
 ################################################################################
-check_data_key <- function(file) {
+check_plate_annotation <- function(file) {
   check <- function(description, f) {
     message(paste0("* ", description, " ... ", collapse = ""), appendLF = FALSE)
     result <- tryCatch(
@@ -128,10 +128,10 @@ check_data_key <- function(file) {
     result
   }
   
-  check("Checking data key file path", function() check_file_path(file))
-  check("Checking that data key file is a csv", function() check_file_path(file))
-  check("Checking that data key file is not empty", function() check_that_file_is_non_empty(file))
-  columns <- check("Checking data key has valid column labels", function() check_column_name(file,'Data key',c("plate","platemap","set","secondary")))
+  check("Checking plate annotation file path", function() check_file_path(file))
+  check("Checking that plate annotation file is a csv", function() check_file_path(file))
+  check("Checking that plate annotation file is not empty", function() check_that_file_is_non_empty(file))
+  columns <- check("Checking plate annotation has valid column labels", function() check_column_name(file,'Data key',c("plate","platemap","set","secondary")))
   
   message("Success!")
 }
@@ -180,9 +180,47 @@ check_annotated_merge_rows <- function(plate_data_tidyr,pre_combined)
     }
   }
 
+### Helper functions for checking QC and Summary Statistics merging
+################################################################################
+check_merge_columns_QC <- function(pre_combined,QC_exp_data)
+  # d1 is pre_combined and d2 is QC_exp_data 
+  {first_merge <- all( intersect(colnames(pre_combined),colnames(QC_exp_data)) %in% c('Plate','Well.ID')) == T
+  if (first_merge == FALSE)
+    {warning('There was an issue with merging the pre-combined and QC passed experimental data together')} }
+
+check_merge_columns_ss <- function(plate_data_tidyr,summary_stats)
+  # d1 is plate_data_tidyr and d2 is summary statistics data
+  {first_merge <- all( intersect(colnames(plate_data_tidyr),colnames(summary_stats)) %in% c('unique_id','Plate')) == T
+  if (first_merge == FALSE)
+    {warning('There was an issue with merging the plate data and summary statistics together')} }
+
+check_dropped_rows_qc <- function(pre_combined,QC_masked_data,dropped_ids,save_path)
+  # d1 is pre_combined and d2 is QC_masked_data
+  {if(nrow(pre_combined) != nrow(QC_masked_data))
+    {if(nrow(pre_combined)  > nrow(QC_masked_data))
+      {warning(paste('Samples dropped or not found in QC experimental data!', '\n','Number of dropped IDs: ',(nrow(pre_combined) - nrow(QC_masked_data)),'\n','You can check the well and plate numbers of dropped IDs in the dropped ID QC csv file if they are different from the other dropped IDs'))
+      dropped_ids_QC <- as.data.frame(pre_combined[ !pre_combined$unique_id_edit %in% QC_masked_data$unique_id_edit, 1:3],colnames = c('Plate','Well.ID','unique_id_edit'))
+      if(nrow(dropped_ids_QC) != nrow(dropped_ids))
+        {write.csv(dropped_ids_QC,file=paste0(save_path,'dropped_IDs_QC','.csv'))}
+            }
+          }
+        }
+
+check_dropped_rows_ss <- function(pre_combined,summary_stats_edited,dropped_ids,save_path)
+  # d1 is pre_combined and d2 is QC_masked_data
+{if(nrow(pre_combined) != nrow(summary_stats_edited))
+  {if(nrow(pre_combined)  > nrow(summary_stats_edited))
+    {warning(paste('Samples dropped or not found in summary stats data!', '\n','Number of dropped IDs: ',(nrow(pre_combined) - nrow(summary_stats_edited)),'\n','You can check the well and plate numbers of dropped IDs in the dropped ID summary stats csv file if they are different from the other dropped IDs'))
+    dropped_ids_ss <- as.data.frame(pre_combined[ !pre_combined$unique_id_edit %in% summary_stats_edited$unique_id_edit, 1:3],colnames = c('Plate','Well.ID','unique_id_edit'))
+    if(nrow(dropped_ids_ss) != nrow(dropped_ids))
+      {write.csv(dropped_ids_ss,file=paste0(save_path,'dropped_IDs_ss','.csv'))}
+    }
+  }
+}
+
 ### Checking formatting of output merged files
 ################################################################################
-check_dim_combined <- function(plate_data_tidyr,pre_combined,combined,save_path,meta_data,exp_df,anno_col) {
+check_dim_combined <- function(plate_data_tidyr,pre_combined,combined,save_path,meta_data,exp_df,anno_col,QC_exp_data,QC_masked_data,summary_stats,summary_stats_edited) {
   check <- function(description, f) {
     message(paste0("* ", description, " ... ", collapse = ""), appendLF = FALSE)
     result <- tryCatch(
@@ -196,14 +234,17 @@ check_dim_combined <- function(plate_data_tidyr,pre_combined,combined,save_path,
     result
   }
   
-  check("Checking whether the correct columns were merged", function() check_merge_columns(plate_data_tidyr,meta_data,pre_combined,exp_df))
+  check("Checking whether the correct columns were merged to create the combined data", function() check_merge_columns(plate_data_tidyr,meta_data,pre_combined,exp_df))
   check("Checking whether the dimensions of the annotated data changed", function() check_anno_dimensions(plate_data_tidyr,pre_combined,anno_col))
   check("Checking whether the dimensions of the experimental data changed", function() check_exp_dimensions(exp_df,pre_combined,combined))
-  check("Checking whether any rows of experimental data were dropped", function() check_dropped_rows(pre_combined,combined,save_path))
+  dropped_ids <- check("Checking whether any rows of experimental data were dropped", function() check_dropped_rows(pre_combined,combined,save_path))
   check("Checking whether any rows of data were added while merging annotated data", function() check_annotated_merge_rows(plate_data_tidyr,pre_combined))
-
+  check("Checking whether the correct columns were merged to create the QC masked data", function() check_merge_columns_QC(pre_combined,QC_exp_data))
+  check("Checking whether any rows of QC experimental data were dropped", function() check_dropped_rows_qc(pre_combined,QC_masked_data,dropped_ids,save_path))
+  check("Checking whether the correct columns were merged to create the summary statistics data", function() check_merge_columns_ss(plate_data_tidyr,summary_stats))
+  check("Checking whether any rows of summary statistics data were dropped", function() check_dropped_rows_ss(pre_combined,summary_stats_edited,dropped_ids,save_path))
+  
   message("Success!")
 }
-
 
 
